@@ -1,0 +1,674 @@
+{
+  "meta": {
+    "title": "Barrana AI Content Agent - Complete Production-Ready Prompt Library",
+    "version": "3.0",
+    "date": "2025-09-11",
+    "description": "Merged prompt library combining enterprise validation with comprehensive content templates",
+    "company": {
+      "name": "Barrana",
+      "website": "barrana.ai",
+      "personal_brand": {
+        "name": "Ikram Rana",
+        "website": "ikramrana.com"
+      }
+    }
+  },
+  "seo": {
+    "primary_keywords": [
+      "AI automation for small business",
+      "Workflow automation small business",
+      "Reduce costs with AI automation",
+      "Business process automation for SMB",
+      "AI increase small business revenue",
+      "AI chatbots for SMB"
+    ],
+    "secondary_keywords": [
+      "Save time small business AI",
+      "AI missed revenue opportunities / find missed sales business",
+      "Stop losing customers AI",
+      "Automate bookkeeping AI SMB",
+      "Business workflow automation solutions"
+    ],
+    "rules": {
+      "natural_placement_only": true,
+      "keywords_per_piece_min": 1,
+      "keywords_per_piece_max": 3,
+      "long_form_primary_keyword_placement": [
+        "title",
+        "intro",
+        "one_subheading"
+      ]
+    },
+    "refresh_policy": {
+      "description": "Update keyword list via SEO analysis twice a week",
+      "cadence": "twice_per_week",
+      "auto_expand_keywords": true,
+      "tools_example": [
+        "Semrush",
+        "Ahrefs",
+        "Google Keyword Planner"
+      ]
+    }
+  },
+  "voice_rules": {
+    "ikram_first_person": [
+      "linkedin",
+      "reddit",
+      "quora",
+      "ikramrana_blog"
+    ],
+    "barrana_we": [
+      "medium",
+      "substack",
+      "barrana_blog",
+      "product_hunt",
+      "crunchbase"
+    ],
+    "flexible": [
+      "twitter",
+      "skool",
+      "dev_to",
+      "stackoverflow",
+      "instagram",
+      "tiktok",
+      "facebook",
+      "pinterest"
+    ]
+  },
+  "globals": {
+    "brand": {
+      "company_name": "Barrana",
+      "website": "https://www.barrana.ai",
+      "personal_brand": "Ikram Rana",
+      "personal_website": "https://ikramrana.com",
+      "regions": [
+        "Canada",
+        "United States",
+        "United Kingdom",
+        "Australia"
+      ]
+    },
+    "tone": "Professional but approachable; plain-English for SMB decision makers with technical precision for developers",
+    "content_framework": [
+      "Pain Point",
+      "Insight/Evidence",
+      "Solution",
+      "CTA"
+    ],
+    "cta": "Contact us via www.barrana.ai or book a consultation.",
+    "evidence_sources": [
+      "WSJ",
+      "NFX",
+      "Reddit"
+    ],
+    "publishing_defaults": {
+      "include_visuals_when_applicable": true,
+      "brand_hashtags": [
+        "#AIForBusiness",
+        "#AutomationForSMBs",
+        "#Barrana"
+      ]
+    }
+  },
+  "guardrails": {
+    "dos": [
+      "Lead with SMB pain point",
+      "Use evidence (WSJ/NFX/Reddit)",
+      "Tailor length & tone per platform",
+      "Sprinkle keywords naturally",
+      "Always include CTA (except StackOverflow)",
+      "Include FAQs with articles 1000+ words",
+      "Use 30/60/90 roadmaps for long-form content",
+      "Reference evidence sources naturally",
+      "Include KPI checklists for business content"
+    ],
+    "donts": [
+      "Do not overpromise ROI",
+      "No keyword/hashtag spam",
+      "Do not post identical content across platforms; adapt for each",
+      "Do not share client-specific data without explicit approval",
+      "Avoid unexplained jargon",
+      "No marketing tone on StackOverflow",
+      "No links in LinkedIn quick posts"
+    ],
+    "validators": [
+      {
+        "id": "require_cta",
+        "type": "presence",
+        "target": "cta",
+        "exclude_platforms": [
+          "stackoverflow"
+        ],
+        "message_on_fail": "CTA missing (required for all platforms except StackOverflow)"
+      },
+      {
+        "id": "avoid_keyword_stuffing",
+        "type": "lint",
+        "max_keyword_density": 0.03,
+        "message_on_fail": "Keyword density exceeds 3% - reduce keyword usage"
+      },
+      {
+        "id": "long_form_faqs",
+        "type": "rule",
+        "applies_when": {
+          "min_words": 1000
+        },
+        "require": [
+          "faq_section"
+        ],
+        "message_on_fail": "FAQ section required for content 1000+ words"
+      },
+      {
+        "id": "evidence_citation",
+        "type": "hint",
+        "should_reference": [
+          "WSJ",
+          "NFX",
+          "Reddit"
+        ],
+        "message_on_fail": "Consider referencing reputable sources (WSJ/NFX/Reddit)"
+      },
+      {
+        "id": "platform_uniqueness",
+        "type": "rule",
+        "enforce": "adapt_per_platform",
+        "message_on_fail": "Content appears duplicated across platforms - ensure adaptation"
+      },
+      {
+        "id": "voice_consistency",
+        "type": "rule",
+        "enforce": "correct_voice_per_platform",
+        "message_on_fail": "Voice does not match platform requirements (I vs We)"
+      }
+    ]
+  },
+  "platforms": {
+    "linkedin": {
+      "voice": "I (Ikram)",
+      "word_count": {
+        "min": 280,
+        "max": 320
+      },
+      "style": "Thought leadership",
+      "hashtags": {
+        "count": "3-5",
+        "examples": [
+          "#AIForBusiness",
+          "#AutomationForSMBs",
+          "#Barrana"
+        ]
+      },
+      "keywords": {
+        "primary": 1,
+        "secondary": 1
+      },
+      "structure": [
+        "Hook",
+        "Pain Point",
+        "Insight/Evidence",
+        "Solution",
+        "CTA"
+      ],
+      "prompt_template": "Write a {word_count_min}-{word_count_max} word LinkedIn post from the perspective of 'I (Ikram Rana)' about: {description}.\n\nStructure:\n1. Start with a bold contrarian statement about the pain point\n2. Provide insight/evidence (2-3 sentences) - reference WSJ/NFX/Reddit if relevant\n3. Present the solution approach\n4. End with engaging question to audience\n\nStyle: Thought leadership, professional but approachable, use line breaks and bullet points for readability\n\nKeywords to include naturally: {primary_keywords} (1 keyword), {secondary_keywords} (1 keyword)\n\nHashtags: Include 3-5 relevant hashtags: #AIForBusiness, #AutomationForSMBs, #Barrana, #WorkflowAutomation, #SmallBusiness\n\nEnd with CTA: {cta}\n\nTone: First-person, punchy, opinion-led. Use plain English for SMB decision makers."
+    },
+    "linkedin_quick": {
+      "voice": "I (Ikram)",
+      "word_count": {
+        "min": 80,
+        "max": 150
+      },
+      "style": "Quick engagement post",
+      "hashtags": {
+        "count": "2-3",
+        "examples": [
+          "#AIForBusiness",
+          "#Barrana"
+        ]
+      },
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "structure": [
+        "Bold contrarian opening",
+        "2–3 insights or bullets",
+        "Open-ended question"
+      ],
+      "rules": {
+        "no_links": true,
+        "hashtags_max": 3
+      },
+      "prompt_template": "Create a short LinkedIn post (80-150 words) from 'I (Ikram Rana)' perspective about: {description}.\n\nStructure:\n1. Opening line: bold contrarian take\n2. 2-3 sentences or bullets showing evidence\n3. End with open-ended question\n\nStyle: Punchy, opinion-led, use line breaks and bullets\nKeywords: Include 1 primary keyword naturally: {primary_keywords}\nHashtags: 2-3 maximum\nNo links - keep native and light\nEnd with: {cta}"
+    },
+    "medium": {
+      "voice": "We (Barrana)",
+      "word_count": {
+        "min": 900,
+        "max": 1200
+      },
+      "style": "SEO-optimized article",
+      "hashtags": {
+        "count": "5-7 tags",
+        "examples": [
+          "#AI",
+          "#Automation",
+          "#SmallBusiness",
+          "#WorkflowAutomation",
+          "#BusinessGrowth",
+          "#AIForBusiness",
+          "#DigitalTransformation"
+        ]
+      },
+      "keywords": {
+        "primary": 2,
+        "secondary": 1
+      },
+      "seo_requirements": {
+        "title_keywords": true,
+        "subheadings": true,
+        "tags": "5-7"
+      },
+      "visuals": [
+        "Cover image",
+        "One diagram"
+      ],
+      "note": "Adapt from Substack but do not copy text verbatim",
+      "prompt_template": "Write a comprehensive Medium article (900-1200 words) from 'We (Barrana)' perspective about: {description}.\n\nStructure:\n1. Compelling title with primary keyword\n2. Hook opening paragraph\n3. Problem identification (SMB pain point)\n4. Evidence section (reference WSJ/NFX/Reddit insights)\n5. Solution presentation with actionable steps\n6. Conclusion with clear next steps\n\nSEO Requirements:\n- Include 2 primary keywords: {primary_keywords}\n- Include 1 secondary keyword: {secondary_keywords}\n- Use keywords in title, intro, and at least 1 subheading\n- Create 3-4 H2 subheadings with keywords\n\nStyle: Professional but approachable, blend plain English for SMB decision makers\nNote: Adapt from Substack content but don't copy exact text\nVisuals: [Cover Image Placeholder] and [Diagram Placeholder]\nEnd with: {cta}\nTags to suggest: 5-7 relevant tags for Medium"
+    },
+    "substack": {
+      "voice": "We (Barrana)",
+      "word_count": {
+        "min": 1000,
+        "max": 1500
+      },
+      "style": "Newsletter narrative",
+      "keywords": {
+        "primary": 2,
+        "secondary": 2
+      },
+      "structure": "Narrative intro → Problem → Evidence (WSJ/NFX/Reddit) → Roadmap (30/60/90) → CTA",
+      "visuals": [
+        "Infographic",
+        "Flowchart"
+      ],
+      "prompt_template": "Create a Substack newsletter (1000-1500 words) from 'We (Barrana)' perspective about: {description}.\n\nStructure:\n1. Narrative introduction with hook\n2. Problem identification for SMBs\n3. Evidence section with references to WSJ/NFX/Reddit insights\n4. 30/60/90 day roadmap for implementation:\n   - 30 days: Initial assessment and quick wins\n   - 60 days: Core implementation\n   - 90 days: Optimization and scaling\n5. Clear CTA\n\nKeywords to include naturally:\n- Primary (2): {primary_keywords}\n- Secondary (2): {secondary_keywords}\n\nStyle: Professional narrative, use evidence-based arguments\nVisuals: [Infographic Placeholder] and [Flowchart Placeholder]\nTone: Authoritative yet accessible for SMB owners\nEnd with: {cta}"
+    },
+    "substack_quick": {
+      "voice": "We (Barrana)",
+      "word_count": {
+        "min": 200,
+        "max": 300
+      },
+      "style": "Quick note/seed idea",
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "structure": [
+        "Bold hook",
+        "Anecdote/stat/observation",
+        "1 key insight or challenge",
+        "Soft CTA"
+      ],
+      "prompt_template": "Write a Substack quick note (200-300 words) from 'We (Barrana)' perspective about: {description}.\n\nStructure:\n1. 1-2 sentence hook (bold statement or question)\n2. Short anecdote or market observation (Reddit/WSJ/NFX reference optional)\n3. 1 key insight or challenge to reader\n4. Soft CTA\n\nStyle: Personal, sharp, opinionated; leave room to expand later\nKeyword: Include 1 primary keyword: {primary_keywords}\nTone: Provocative, ask 'what if?' or 'why not?'\nDon't overload with evidence (save for long-form)\nEnd with soft CTA linking to barrana.ai"
+    },
+    "barrana_blog": {
+      "voice": "We (Barrana)",
+      "word_count": {
+        "min": 1500,
+        "max": 2000
+      },
+      "style": "SEO-heavy comprehensive guide",
+      "keywords": {
+        "primary": 3,
+        "secondary": 2
+      },
+      "structure": "H1 title, multiple H2/H3 with keywords, FAQ section, KPI checklist",
+      "visuals": [
+        "Comparison table",
+        "Flowchart",
+        "KPI list"
+      ],
+      "seo_requirements": {
+        "title_keywords": true,
+        "subheadings": "H2/H3 with keywords",
+        "faq_section": true,
+        "kpi_checklist": true
+      },
+      "prompt_template": "Create a comprehensive blog post (1500-2000 words) for Barrana.ai from 'We (Barrana)' perspective about: {description}.\n\nStructure:\n1. SEO-optimized H1 title with primary keyword\n2. Executive summary (150 words)\n3. Problem definition (H2 with keyword)\n4. Evidence and market analysis (H2 with keyword)\n5. Solution framework (H2 with keyword)\n6. Implementation roadmap (H2 with keyword)\n7. KPI tracking checklist:\n   - Cost reduction metrics\n   - Time savings measurements\n   - Revenue impact tracking\n   - Process efficiency indicators\n8. FAQ section (5-7 questions):\n   - What ROI can SMBs expect?\n   - How long does implementation take?\n   - What are common challenges?\n   - Which processes should be automated first?\n   - How to measure success?\n9. Conclusion with CTA\n\nSEO Requirements:\n- Primary keywords (2-3): {primary_keywords}\n- Secondary keywords (2): {secondary_keywords}\n- Keywords in title, intro, and subheadings\n- Internal linking opportunities\n\nVisuals to include:\n- [Comparison Table Placeholder]\n- [Process Flowchart Placeholder]\n- [KPI Checklist Placeholder]\n\nStyle: Technical precision for developers, plain English for SMB decision makers\nEnd with: {cta}"
+    },
+    "ikramrana_blog": {
+      "voice": "I (Ikram)",
+      "word_count": {
+        "min": 800,
+        "max": 1200
+      },
+      "style": "Personal POV and experience",
+      "keywords": {
+        "primary": 1,
+        "secondary": 1
+      },
+      "visuals": [
+        "Simple diagram or image"
+      ],
+      "prompt_template": "Write a personal blog post (800-1200 words) for ikramrana.com from 'I (Ikram Rana)' perspective about: {description}.\n\nStructure:\n1. Personal hook or story\n2. Problem I've observed in SMBs\n3. My insights and experience\n4. Evidence from my work with clients\n5. Actionable advice\n6. Personal reflection and next steps\n\nStyle: Personal POV, insights from my experience with SMBs\nKeywords:\n- Primary (1): {primary_keywords}\n- Secondary (1): {secondary_keywords}\n\nTone: Personal, authentic, experience-driven\nVisuals: [Simple Diagram/Image Placeholder]\nEnd with: {cta}"
+    },
+    "twitter": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 8,
+        "max": 12,
+        "unit": "tweets"
+      },
+      "character_limit": 280,
+      "style": "Thread format",
+      "hashtags": {
+        "count": "2-3 max",
+        "examples": [
+          "#AIForBusiness",
+          "#AutomationForSMBs",
+          "#Barrana"
+        ]
+      },
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "structure": [
+        "Hook",
+        "Insights",
+        "Evidence",
+        "SMB roadmap",
+        "CTA"
+      ],
+      "prompt_template": "Create a Twitter thread (8-12 tweets) about: {description}.\n\nThread Structure:\n1. Hook tweet with bold statement (280 chars max)\n2-3. Problem identification tweets (280 chars each)\n4-6. Insights and evidence tweets (280 chars each)\n7-9. Solution/roadmap tweets (280 chars each)\n10-11. Examples or case studies (280 chars each)\n12. CTA tweet (280 chars max)\n\nKeyword: Include 1 primary keyword across thread: {primary_keywords}\nHashtags: 2-3 max (#AIForBusiness, #AutomationForSMBs, #Barrana)\nStyle: Hook → Insights → Evidence → SMB roadmap → CTA\nTone: Plain English, punchy, easy to retweet\nEnd thread with: {cta}"
+    },
+    "twitter_quick": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 1,
+        "max": 3,
+        "unit": "tweets"
+      },
+      "character_limit": 280,
+      "style": "Mini-thread",
+      "hashtags": {
+        "count": "1-2 max"
+      },
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "structure": [
+        "Hook",
+        "Insight/stat",
+        "CTA/Question"
+      ],
+      "rules": {
+        "emoji_max": 1,
+        "hashtags_max": 2
+      },
+      "prompt_template": "Create a 3-tweet mini-thread about: {description}.\n\nStructure:\n- Tweet 1: contrarian hook/hot take (280 chars max)\n- Tweet 2: one supporting insight or stat (280 chars max)\n- Tweet 3: invite discussion or CTA (280 chars max)\n\nStyle: Punchy, contrarian, easy to retweet\nHashtags: 1-2 max, 1 emoji max\nTone: Plain English\nKeyword: {primary_keywords} (use lightly)\nDon't stuff hashtags"
+    },
+    "reddit": {
+      "voice": "I (Ikram)",
+      "word_count": {
+        "min": 400,
+        "max": 600
+      },
+      "style": "Conversational discussion",
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "prompt_template": "Write a Reddit post (400-600 words) from 'I (Ikram)' perspective about: {description}.\n\nStructure:\n1. Personal hook or experience\n2. Problem discussion\n3. Insights and evidence\n4. Community discussion points\n5. Open-ended question\n\nStyle: Conversational, authentic, community-focused\nKeyword: Include 1 primary keyword lightly: {primary_keywords}\nTone: Genuine, helpful, not overly promotional\nEnd with engaging question to spark discussion\nCTA: {cta} (mention subtly, not pushy)"
+    },
+    "quora": {
+      "voice": "I (Ikram)",
+      "word_count": {
+        "min": 500,
+        "max": 700
+      },
+      "style": "Answer format with authority",
+      "keywords": {
+        "primary": 1,
+        "secondary": 1
+      },
+      "prompt_template": "Write a Quora answer (500-700 words) from 'I (Ikram Rana)' perspective answering a question about: {description}.\n\nStructure:\n1. Direct answer to the question\n2. Personal experience/credentials establishment\n3. Detailed explanation with examples\n4. Reference WSJ/NFX/Reddit naturally in evidence\n5. Actionable advice for the questioner\n6. Subtle CTA\n\nStyle: Answer format, authoritative but helpful\nKeywords:\n- Primary (1): {primary_keywords}\n- Secondary (1): {secondary_keywords}\n\nTone: Expert but approachable, cite relevant sources naturally\nEnd with: {cta}"
+    },
+    "tiktok": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 30,
+        "max": 60,
+        "unit": "seconds script"
+      },
+      "caption_length": {
+        "min": 70,
+        "max": 120
+      },
+      "style": "Video script + caption",
+      "hashtags": {
+        "count": "3-5 trending + brand",
+        "examples": [
+          "#AIForBusiness",
+          "#Barrana",
+          "#SmallBusiness",
+          "#Automation",
+          "#TechTips"
+        ]
+      },
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "prompt_template": "Create TikTok content about: {description}.\n\n1. VIDEO SCRIPT (30-60 seconds):\n- Hook (first 3 seconds): Bold statement or question\n- Problem presentation (visual demo)\n- Quick solution demonstration\n- Clear takeaway/call to action\n\n2. CAPTION (70-120 words):\n- Engaging opener that reinforces video hook\n- Key insight or statistic\n- Call to action\n\nKeyword in caption: {primary_keywords}\nHashtags: 3-5 trending + brand (#AIForBusiness #Barrana #SmallBusiness #Automation #TechTips)\nStyle: Fast-paced, visual, educational\nEnd caption with: {cta}"
+    },
+    "instagram": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 100,
+        "max": 150,
+        "unit": "caption words"
+      },
+      "style": "Visual content + caption",
+      "hashtags": {
+        "count": "3-5 trending + brand",
+        "examples": [
+          "#AIForBusiness",
+          "#Barrana",
+          "#SmallBusiness",
+          "#Automation",
+          "#BusinessGrowth"
+        ]
+      },
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "prompt_template": "Create Instagram content about: {description}.\n\n1. VISUAL CONCEPT:\n- Static post, carousel, or reel concept\n- Key visual elements to highlight\n\n2. CAPTION (100-150 words):\n- Attention-grabbing opener\n- Key insight or tip\n- Engaging question or CTA\n\nKeyword in caption: {primary_keywords}\nHashtags: 3-5 trending + brand (#AIForBusiness #Barrana #SmallBusiness #Automation #BusinessGrowth)\nStyle: Visual-first, engaging, inspirational\nEnd caption with: {cta}"
+    },
+    "facebook": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 100,
+        "max": 150,
+        "unit": "post words"
+      },
+      "style": "Community-focused post",
+      "hashtags": {
+        "count": "3-5",
+        "examples": [
+          "#AIForBusiness",
+          "#Barrana",
+          "#SmallBusiness"
+        ]
+      },
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "prompt_template": "Create Facebook post about: {description}.\n\nStructure:\n1. Community-focused opener\n2. Problem or insight discussion\n3. Solution or advice\n4. Engagement question\n\nLength: 100-150 words\nKeyword: {primary_keywords}\nHashtags: 3-5 (#AIForBusiness #Barrana #SmallBusiness)\nStyle: Community-focused, conversational\nEnd with: {cta}"
+    },
+    "pinterest": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 100,
+        "max": 150,
+        "unit": "pin description"
+      },
+      "style": "SEO-optimized pin description",
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "visuals": [
+        "Infographic focused on AI Add-On vs AI-Native"
+      ],
+      "prompt_template": "Create Pinterest pin description (100-150 words) about: {description}.\n\nPin Description:\n1. SEO-optimized opener with keyword\n2. Value proposition\n3. Benefits list (3-4 bullets)\n4. CTA\n\nVisual Concept: Infographic showing 'AI Add-On vs AI-Native' comparison\nKeyword: {primary_keywords}\nStyle: SEO-focused, benefit-driven\nEnd with: {cta}"
+    },
+    "slideshare": {
+      "voice": "We (Barrana)",
+      "word_count": {
+        "min": 10,
+        "max": 20,
+        "unit": "slides"
+      },
+      "words_per_slide": {
+        "min": 25,
+        "max": 35
+      },
+      "style": "Professional presentation",
+      "structure": "Title → Problem → Market evidence → Wrapper issue → AI-native roadmap → Examples → KPIs → CTA",
+      "visuals": [
+        "Barrana branding & colors"
+      ],
+      "keywords": {
+        "primary": 2,
+        "secondary": 1
+      },
+      "prompt_template": "Create SlideShare presentation (10-20 slides, 25-35 words per slide) about: {description}.\n\nSlide Structure:\n1. Title slide with primary keyword\n2-3. Problem identification for SMBs\n4-5. Market evidence (WSJ/NFX/Reddit insights)\n6-7. AI wrapper vs AI-native issue\n8-12. AI-native roadmap and implementation\n13-15. Examples and case studies\n16-17. KPIs and success metrics\n18-20. CTA and contact information\n\nKeywords:\n- Primary (2): {primary_keywords}\n- Secondary (1): {secondary_keywords}\n\nVisual Notes: Use Barrana branding & colors throughout\nStyle: Professional, executive-level presentation\nEnd with: {cta}"
+    },
+    "product_hunt": {
+      "voice": "We (Barrana)",
+      "word_count": {
+        "min": 200,
+        "max": 400
+      },
+      "style": "Product positioning",
+      "structure": "Problem → Solution → Features → CTA",
+      "visuals": [
+        "Screenshots",
+        "Demo GIF"
+      ],
+      "keywords": {
+        "primary": 1,
+        "secondary": 1
+      },
+      "prompt_template": "Create Product Hunt description (200-400 words) from 'We (Barrana)' perspective for: {description}.\n\nStructure:\n1. Problem identification for SMBs\n2. Solution overview\n3. Key features (3-5 bullets)\n4. Benefits and ROI for SMBs\n5. CTA\n\nKeywords:\n- Primary (1): {primary_keywords}\n- Secondary (1): {secondary_keywords}\n\nStyle: Crisp, feature-focused, benefit-driven\nVisuals: [Screenshot Placeholder] and [Demo GIF Placeholder]\nEnd with: {cta}"
+    },
+    "crunchbase": {
+      "voice": "We (Barrana)",
+      "word_count": {
+        "min": 100,
+        "max": 300
+      },
+      "style": "Company positioning",
+      "content_focus": "Crisp positioning, regions served, core focus",
+      "keywords": {
+        "primary": 1,
+        "secondary": 0
+      },
+      "prompt_template": "Create Crunchbase company description (100-300 words) from 'We (Barrana)' perspective about: {description}.\n\nStructure:\n1. Company mission and positioning\n2. Core services and focus areas\n3. Target market (SMBs in Canada, US, UK, Australia)\n4. Key differentiators\n5. Contact information\n\nContent Focus: Crisp positioning, regions served, core focus\nKeyword: {primary_keywords}\nStyle: Professional, concise, investor-focused\nRegions: Canada (primary), US, UK, Australia\nEnd with: {cta}"
+    },
+    "skool": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 200,
+        "max": 600
+      },
+      "style": "Educational lesson post",
+      "keywords": {
+        "primary": 1,
+        "secondary": 1
+      },
+      "prompt_template": "Create Skool community post (200-600 words) about: {description}.\n\nStructure:\n1. Lesson introduction\n2. Problem/challenge identification\n3. Step-by-step solution or framework\n4. Real-world examples\n5. Community discussion question\n\nKeywords:\n- Primary (1): {primary_keywords}\n- Secondary (1): {secondary_keywords}\n\nStyle: Educational lesson post, community-focused\nEnd with community question to drive engagement\nCTA: {cta}"
+    },
+    "stackoverflow": {
+      "voice": "Technical",
+      "word_count": {
+        "min": 150,
+        "max": 400
+      },
+      "style": "Direct technical answer",
+      "special_rules": "No marketing tone, pseudocode allowed",
+      "keywords": {
+        "primary": 0,
+        "secondary": 0
+      },
+      "prompt_template": "Create StackOverflow answer (150-400 words) about: {description}.\n\nStructure:\n1. Direct answer to the technical question\n2. Code example or pseudocode if applicable\n3. Explanation of approach\n4. Alternative solutions or considerations\n5. References to documentation or best practices\n\nStyle: Direct technical answer, helpful, solution-focused\nSpecial Rules: NO marketing tone, pseudocode allowed\nKeywords: None (avoid marketing keywords)\nNo CTA - keep purely technical and helpful"
+    },
+    "dev_to": {
+      "voice": "Flexible",
+      "word_count": {
+        "min": 400,
+        "max": 800
+      },
+      "style": "Technical tutorial",
+      "visuals": [
+        "Workflow diagram",
+        "Pseudocode"
+      ],
+      "keywords": {
+        "primary": 0,
+        "secondary": 0,
+        "technical_focus": "light technical keywords only"
+      },
+      "prompt_template": "Create Dev.to technical tutorial (400-800 words) about: {description}.\n\nStructure:\n1. Tutorial introduction and objectives\n2. Prerequisites and setup\n3. Step-by-step implementation guide\n4. Code examples and explanations\n5. Common pitfalls and troubleshooting\n6. Conclusion and next steps\n\nStyle: Technical tutorial with workflow diagram and pseudocode\nVisuals: [Workflow Diagram Placeholder] and code examples\nKeywords: Light technical focus only, avoid heavy marketing terms\nTone: Developer-friendly, educational\nEnd with: {cta} (subtle, developer-appropriate)"
+    }
+  },
+  "runtime": {
+    "input": {
+      "required": [
+        "video_script"
+      ],
+      "optional": [
+        "target_platforms",
+        "additional_context",
+        "preferred_keywords",
+        "forbidden_topics"
+      ]
+    },
+    "output_schema": {
+      "fields": [
+        "platform",
+        "voice",
+        "keywords_used",
+        "word_count_or_length",
+        "body",
+        "visuals_suggestions",
+        "hashtags",
+        "cta_included",
+        "faq_section_if_applicable"
+      ]
+    },
+    "post_processors": [
+      "check_required_cta",
+      "enforce_keyword_limits",
+      "ensure_platform_adaptation",
+      "attach_visual_suggestions",
+      "append_faqs_if_long_form",
+      "validate_voice_consistency",
+      "check_evidence_citations"
+    ]
+  },
+  "prompt_variables": {
+    "description": "The main content topic/description from user input",
+    "primary_keywords": "Selected primary keywords from the primary array",
+    "secondary_keywords": "Selected secondary keywords from the secondary array",
+    "cta": "The standard Barrana CTA",
+    "word_count_min": "Minimum word count for the platform",
+    "word_count_max": "Maximum word count for the platform",
+    "hashtags": "Platform-specific hashtag suggestions"
+  }
+}

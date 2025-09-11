@@ -1,0 +1,120 @@
+{
+  "version": "3.1",
+  "last_updated": "2024-01-11",
+  "globals": {
+    "cta": "Ready to transform your business with AI? Let's talk.",
+    "brand_voice": "Professional, insightful, and results-driven",
+    "tone": "Conversational yet authoritative"
+  },
+  "seo": {
+    "primary_keywords": [
+      "AI automation",
+      "business transformation",
+      "AI native",
+      "digital efficiency",
+      "AI implementation"
+    ],
+    "secondary_keywords": [
+      "automation tools",
+      "business process",
+      "AI strategy",
+      "digital transformation",
+      "AI solutions"
+    ],
+    "refresh_policy": {
+      "frequency": "monthly",
+      "last_refresh": "2024-01-01"
+    }
+  },
+  "platforms": {
+    "linkedin": {
+      "voice": "Professional and thought-leadership focused",
+      "word_count": {
+        "min": 150,
+        "max": 300
+      },
+      "prompt_template": "Write a professional LinkedIn post about: {description}. Use a professional tone that establishes thought leadership. Include the primary keywords: {primary_keywords} and secondary keywords: {secondary_keywords}. Keep it between {word_count_min} and {word_count_max} words. End with this CTA: {cta}",
+      "hashtags": ["#AI", "#BusinessTransformation", "#Automation", "#Barrana"],
+      "keywords": ["AI", "automation", "business", "transformation"]
+    },
+    "medium": {
+      "voice": "In-depth and analytical",
+      "word_count": {
+        "min": 800,
+        "max": 1500
+      },
+      "prompt_template": "Write a comprehensive Medium article about: {description}. Use an analytical and in-depth approach. Include the primary keywords: {primary_keywords} and secondary keywords: {secondary_keywords}. Keep it between {word_count_min} and {word_count_max} words. End with this CTA: {cta}",
+      "hashtags": ["#AI", "#Business", "#Technology", "#Innovation"],
+      "keywords": ["AI", "business", "technology", "innovation"]
+    },
+    "substack": {
+      "voice": "Personal and insightful",
+      "word_count": {
+        "min": 600,
+        "max": 1200
+      },
+      "prompt_template": "Write a personal and insightful Substack newsletter about: {description}. Use a conversational yet professional tone. Include the primary keywords: {primary_keywords} and secondary keywords: {secondary_keywords}. Keep it between {word_count_min} and {word_count_max} words. End with this CTA: {cta}",
+      "hashtags": ["#AI", "#Business", "#Newsletter"],
+      "keywords": ["AI", "business", "newsletter"]
+    },
+    "pinterest": {
+      "voice": "Visual and engaging",
+      "word_count": {
+        "min": 100,
+        "max": 200
+      },
+      "prompt_template": "Write a Pinterest-worthy description about: {description}. Make it visual and engaging. Include the primary keywords: {primary_keywords} and secondary keywords: {secondary_keywords}. Keep it between {word_count_min} and {word_count_max} words. End with this CTA: {cta}",
+      "hashtags": ["#AI", "#Business", "#Pinterest", "#Visual"],
+      "keywords": ["AI", "business", "visual", "pinterest"]
+    },
+    "reddit": {
+      "voice": "Authentic and community-focused",
+      "word_count": {
+        "min": 200,
+        "max": 500
+      },
+      "prompt_template": "Write a Reddit post about: {description}. Use an authentic and community-focused tone. Include the primary keywords: {primary_keywords} and secondary keywords: {secondary_keywords}. Keep it between {word_count_min} and {word_count_max} words. End with this CTA: {cta}",
+      "hashtags": ["#AI", "#Business", "#Reddit"],
+      "keywords": ["AI", "business", "reddit"]
+    },
+    "product_hunt": {
+      "voice": "Exciting and product-focused",
+      "word_count": {
+        "min": 150,
+        "max": 300
+      },
+      "prompt_template": "Write a Product Hunt launch post about: {description}. Use an exciting and product-focused tone. Include the primary keywords: {primary_keywords} and secondary keywords: {secondary_keywords}. Keep it between {word_count_min} and {word_count_max} words. End with this CTA: {cta}",
+      "hashtags": ["#AI", "#Product", "#Launch", "#Innovation"],
+      "keywords": ["AI", "product", "launch", "innovation"]
+    }
+  },
+  "guardrails": {
+    "validators": {
+      "cta_required": true,
+      "keyword_density_min": 0.02,
+      "keyword_density_max": 0.05,
+      "faq_min_words": 1000,
+      "uniqueness_check": true,
+      "voice_consistency": true,
+      "evidence_citation": false
+    }
+  },
+  "runtime": {
+    "output_schema": {
+      "platform": "string",
+      "voice": "string",
+      "keywords_used": "array",
+      "word_count_or_length": "number",
+      "body": "string",
+      "visuals_suggestions": "array",
+      "hashtags": "array",
+      "cta_included": "boolean",
+      "faq_section_if_applicable": "string|null"
+    },
+    "post_processors": [
+      "append_faq_if_missing",
+      "attach_visual_placeholders",
+      "validate_hashtags"
+    ]
+  }
+}
