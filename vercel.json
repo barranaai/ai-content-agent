@@ -22,5 +22,5 @@
       "src": "/(.*)",
       "dest": "/ai-content-agent-ui/$1"
     }
-  ],
+  ]
 }
