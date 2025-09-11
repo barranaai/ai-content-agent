@@ -11,7 +11,7 @@ def create_client_secret_file():
     """Create client_secret.json from environment variable"""
     client_secret_content = os.environ.get('GOOGLE_CLIENT_SECRET')
     if not client_secret_content:
-        raise Exception("GOOGLE_CLIENT_SECRET environment variable not set")
+        raise Exception("GOOGLE_CLIENT_SECRET environment variable not set. Please add it in Vercel dashboard.")
     
     # Write the content to a temporary file
     with open('client_secret.json', 'w') as f:

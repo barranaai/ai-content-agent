@@ -15,8 +15,14 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(topics).encode())
         except Exception as e:
+            error_msg = f"Topics API Error: {str(e)}"
+            print(error_msg)  # Log to Vercel console
+            
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self.wfile.write(json.dumps({
+                "error": error_msg,
+                "hint": "Check Vercel environment variables and Google Sheets access"
+            }).encode())
