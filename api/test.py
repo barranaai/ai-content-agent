@@ -28,7 +28,8 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(json.dumps({
-            "message": "API is working!",
+            "message": "API is working! (Updated)",
             "environment_variables": env_vars,
-            "token_pickle_test": token_test
+            "token_pickle_test": token_test,
+            "deployment_status": "Latest version deployed"
         }).encode())
