@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+import base64
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -19,23 +20,43 @@ def create_client_secret_file():
     
     return 'client_secret.json'
 
+def create_token_pickle_file():
+    """Create token.pickle from environment variable"""
+    token_pickle_b64 = os.environ.get('GOOGLE_TOKEN_PICKLE')
+    if not token_pickle_b64:
+        raise Exception("GOOGLE_TOKEN_PICKLE environment variable not set. Please add it in Vercel dashboard.")
+    
+    # Decode base64 and write to file
+    token_pickle_data = base64.b64decode(token_pickle_b64)
+    with open('token.pickle', 'wb') as f:
+        f.write(token_pickle_data)
+    
+    return 'token.pickle'
+
 def get_google_sheets_service():
     creds = None
     
     # Create client_secret.json from environment variable
     client_secret_file = create_client_secret_file()
     
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
+    # Create token.pickle from environment variable
+    token_pickle_file = create_token_pickle_file()
+    
+    # Load credentials from token.pickle
+    with open('token.pickle', 'rb') as token:
+        creds = pickle.load(token)
+    
+    # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
             creds = flow.run_local_server(port=8080)
+        # Save the credentials for the next run
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
+    
     service = build('sheets', 'v4', credentials=creds)
     return service
 
