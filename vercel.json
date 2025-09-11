@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.9"
+    }
+  },
   "builds": [
     {
       "src": "api/*.py",
@@ -11,16 +16,6 @@
       "config": {
         "distDir": "build"
       }
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/ai-content-agent-ui/$1"
     }
   ]
 }
