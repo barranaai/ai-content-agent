@@ -1,13 +1,30 @@
 import os
 import pickle
+import json
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
+def create_client_secret_file():
+    """Create client_secret.json from environment variable"""
+    client_secret_content = os.environ.get('GOOGLE_CLIENT_SECRET')
+    if not client_secret_content:
+        raise Exception("GOOGLE_CLIENT_SECRET environment variable not set")
+    
+    # Write the content to a temporary file
+    with open('client_secret.json', 'w') as f:
+        f.write(client_secret_content)
+    
+    return 'client_secret.json'
+
 def get_google_sheets_service():
     creds = None
+    
+    # Create client_secret.json from environment variable
+    client_secret_file = create_client_secret_file()
+    
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
@@ -15,7 +32,7 @@ def get_google_sheets_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('client_secret.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
             creds = flow.run_local_server(port=8080)
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
