@@ -1,220 +1,214 @@
-# 🚀 AI Content Agent v2.0 - Deployment Guide
+# 🚀 AI Content Agent - Railway Deployment Guide
 
-## 📋 **System Overview**
+## 📋 **Pre-Deployment Checklist**
 
-The AI Content Agent has been upgraded to v2.0 with a new JSON-based prompt library system that provides:
+### ✅ **Required Files (Already Created)**
+- `Procfile` - Tells Railway how to run your app
+- `runtime.txt` - Specifies Python version
+- `.gitignore` - Excludes unnecessary files
+- `requirements.txt` - Python dependencies
+- `app.py` - Updated for production deployment
 
-- ✅ **Enhanced Content Quality** - Advanced validation and quality control
-- ✅ **SEO Optimization** - Dynamic keyword management and rotation
-- ✅ **Platform-Specific Optimization** - Tailored content for each platform
-- ✅ **Backward Compatibility** - Seamless fallback to Google Sheets
-- ✅ **Professional Monitoring** - Health checks and system metrics
-
-## 🏗️ **Architecture**
-
-### **New Components:**
-- `prompt_library.py` - JSON-based prompt management
-- `validation.py` - Content validation and quality control
-- `seo_manager.py` - SEO keyword management and rotation
-- `barrana-merged-prompt-library-v3.json` - Centralized prompt library
-
-### **Enhanced Features:**
-- **Dynamic Prompt Building** - Runtime variable injection
-- **Quality Validation** - Input/output validation with metrics
-- **SEO Management** - Keyword rotation and optimization
-- **Platform Optimization** - Platform-specific content generation
-- **Health Monitoring** - System status and performance metrics
-
-## 🔧 **Deployment Steps**
-
-### **Step 1: Environment Setup**
-```bash
-# Ensure all dependencies are installed
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Verify environment variables
-echo $OPENAI_API_KEY
-```
-
-### **Step 2: Feature Flags Configuration**
-Set environment variables to control system behavior:
+### ✅ **Required Environment Variables**
+You'll need to set these in Railway dashboard:
 
 ```bash
-# Enable JSON library (default: true)
-export USE_JSON_LIBRARY=true
+# OpenAI API Key (Required)
+OPENAI_API_KEY=your_openai_api_key_here
 
-# Enable Google Sheets fallback (default: true)
-export FALLBACK_TO_SHEETS=true
+# Google Sheets IDs (Required)
+GOOGLE_SHEETS_TOPICS_ID=12qFx-0Si0-g8Hp_yq7sIm7I5gJiACaOaLep04dSYC_U
+GOOGLE_SHEETS_PROMPTS_ID=1MIS7Nl1AdTy7mjwKaIDCBV820bXZteHvdIxo8WETYnc
+
+# Feature Flags (Optional - defaults shown)
+USE_JSON_LIBRARY=true
+FALLBACK_TO_SHEETS=true
+
+# Flask Environment (Optional)
+FLASK_ENV=production
 ```
 
-### **Step 3: Start the Application**
-```bash
-# Start the new v2.0 system
-source venv/bin/activate
-python app.py
+### ✅ **Required Files to Upload**
+Make sure these files are in your repository:
+- `client_secret.json` (Google OAuth credentials)
+- `Barrana-Merged-Prompt-Library-v3.1.json`
+- `barrana_rag_corpus.jsonl` (if using RAG system)
+- `barrana_rag_manifest.json` (if using RAG system)
+
+---
+
+## 🚀 **Railway Deployment Steps**
+
+### **Step 1: Prepare Your Repository**
+
+1. **Commit all changes:**
+   ```bash
+   git add .
+   git commit -m "Add Railway deployment configuration"
+   git push origin main
+   ```
+
+2. **Verify files are present:**
+   ```bash
+   ls -la
+   # Should see: Procfile, runtime.txt, .gitignore
+   ```
+
+### **Step 2: Create Railway Account**
+
+1. Go to [railway.app](https://railway.app)
+2. Sign up with GitHub
+3. Authorize Railway to access your repositories
+
+### **Step 3: Deploy Your App**
+
+1. **Click "New Project"**
+2. **Select "Deploy from GitHub repo"**
+3. **Choose your repository:** `ai-content-agent`
+4. **Railway will auto-detect:** Python application
+5. **Click "Deploy Now"**
+
+### **Step 4: Configure Environment Variables**
+
+1. **Go to your project dashboard**
+2. **Click on your service**
+3. **Go to "Variables" tab**
+4. **Add each environment variable:**
+
+   | Variable Name | Value | Required |
+   |---------------|-------|----------|
+   | `OPENAI_API_KEY` | `your_actual_openai_key` | ✅ Yes |
+   | `GOOGLE_SHEETS_TOPICS_ID` | `12qFx-0Si0-g8Hp_yq7sIm7I5gJiACaOaLep04dSYC_U` | ✅ Yes |
+   | `GOOGLE_SHEETS_PROMPTS_ID` | `1MIS7Nl1AdTy7mjwKaIDCBV820bXZteHvdIxo8WETYnc` | ✅ Yes |
+   | `USE_JSON_LIBRARY` | `true` | ⚠️ Optional |
+   | `FALLBACK_TO_SHEETS` | `true` | ⚠️ Optional |
+   | `FLASK_ENV` | `production` | ⚠️ Optional |
+
+### **Step 5: Deploy Frontend (React App)**
+
+#### **Option A: Deploy to Vercel (Recommended)**
+
+1. **Go to [vercel.com](https://vercel.com)**
+2. **Import your repository**
+3. **Set build settings:**
+   - **Root Directory:** `ai-content-agent-ui`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `build`
+
+4. **Add environment variable:**
+   - `REACT_APP_API_URL` = `https://your-railway-app-url.railway.app`
+
+5. **Update your React app's API calls:**
+   ```javascript
+   // In your React components
+   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+   ```
+
+#### **Option B: Deploy to Railway (Alternative)**
+
+1. **Create new Railway service**
+2. **Select "Deploy from GitHub repo"**
+3. **Choose same repository**
+4. **Set root directory:** `ai-content-agent-ui`
+5. **Add environment variable:**
+   - `REACT_APP_API_URL` = `https://your-backend-url.railway.app`
+
+---
+
+## 🔧 **Post-Deployment Configuration**
+
+### **Step 1: Test Your Backend**
+
+1. **Get your Railway URL:** `https://your-app-name.railway.app`
+2. **Test health endpoint:** `https://your-app-name.railway.app/api/health`
+3. **Test topics endpoint:** `https://your-app-name.railway.app/api/topics`
+
+### **Step 2: Update Frontend API URL**
+
+If deploying frontend separately, update the API URL in your React app:
+
+```javascript
+// In ai-content-agent-ui/src/App.js or similar
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050';
 ```
 
-### **Step 4: Verify Deployment**
-```bash
-# Test health endpoint
-curl http://localhost:5050/api/health
+### **Step 3: Test Google Sheets Integration**
 
-# Test system info
-curl http://localhost:5050/api/system-info
+1. **Upload `client_secret.json`** to your repository
+2. **First API call will generate `token.pickle`** automatically
+3. **Verify topics are loading** from Google Sheets
 
-# Test content generation
-curl -X POST http://localhost:5050/api/generate-content \
-  -H "Content-Type: application/json" \
-  -d '{
-    "topic": "AI Automation",
-    "description": "How AI automation can transform business operations",
-    "platforms": ["linkedin"],
-    "prompts": {}
-  }'
-```
-
-## 📊 **Monitoring & Health Checks**
-
-### **Health Endpoint: `/api/health`**
-Returns system status and component health:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2025-01-11T16:29:19.050695",
-  "systems": {
-    "json_library": true,
-    "validator": true,
-    "seo_manager": true,
-    "openai": true,
-    "google_sheets": true
-  },
-  "feature_flags": {
-    "use_json_library": true,
-    "fallback_to_sheets": true
-  }
-}
-```
-
-### **System Info Endpoint: `/api/system-info`**
-Returns system version and capabilities:
-```json
-{
-  "version": "2.0.0",
-  "json_library_version": "3.1",
-  "available_platforms": ["linkedin", "medium", "substack", "pinterest", "reddit", "product_hunt"],
-  "features": {
-    "validation": true,
-    "seo_management": true,
-    "keyword_rotation": true,
-    "quality_control": true
-  }
-}
-```
-
-## 🔄 **Rollback Strategy**
-
-### **Emergency Rollback:**
-```bash
-# Stop current system
-kill $(lsof -t -i:5050)
-
-# Start legacy system
-source venv/bin/activate
-python app_legacy.py
-```
-
-### **Feature Flag Rollback:**
-```bash
-# Disable JSON library, use Google Sheets only
-export USE_JSON_LIBRARY=false
-python app.py
-```
-
-## 🧪 **Testing**
-
-### **Run Integration Tests:**
-```bash
-# Test new system components
-python test_new_system.py
-
-# Test complete integration
-python test_integration.py
-```
-
-### **Manual Testing:**
-1. **Health Check** - Verify all systems are healthy
-2. **Content Generation** - Test single and multi-platform generation
-3. **Error Handling** - Test with invalid inputs
-4. **Performance** - Monitor response times
-
-## 📈 **Performance Metrics**
-
-### **Expected Performance:**
-- **Health Check**: < 100ms
-- **Content Generation**: 5-15 seconds per platform
-- **Multi-Platform**: 10-30 seconds for 2-3 platforms
-- **Error Handling**: < 500ms
-
-### **Quality Metrics:**
-- **Input Validation**: 100% success rate
-- **Output Validation**: 95%+ pass rate
-- **CTA Inclusion**: 100% for LinkedIn, Medium
-- **Keyword Density**: 2-5% optimal range
+---
 
 ## 🚨 **Troubleshooting**
 
 ### **Common Issues:**
 
-1. **JSON Library Not Loading**
-   - Check file permissions
-   - Verify JSON syntax
-   - Check file path
+#### **1. CORS Errors**
+- **Problem:** Frontend can't connect to backend
+- **Solution:** Update CORS origins in `app.py` with your frontend URL
 
-2. **OpenAI API Errors**
-   - Verify API key
-   - Check rate limits
-   - Monitor usage
+#### **2. Environment Variables Not Working**
+- **Problem:** API keys not found
+- **Solution:** Check Railway Variables tab, ensure exact variable names
 
-3. **Google Sheets Fallback Issues**
-   - Verify `client_secret.json` exists
-   - Check `token.pickle` validity
-   - Test Google Sheets access
+#### **3. Google Sheets Authentication**
+- **Problem:** `client_secret.json` not found
+- **Solution:** Ensure file is committed to repository
 
-### **Logs:**
+#### **4. Port Issues**
+- **Problem:** App not starting
+- **Solution:** Railway sets `PORT` environment variable automatically
+
+### **Debug Commands:**
+
 ```bash
-# Monitor application logs
-tail -f app.log
+# Check Railway logs
+railway logs
 
-# Check system health
-curl http://localhost:5050/api/health
+# Check environment variables
+railway variables
+
+# Restart service
+railway redeploy
 ```
-
-## 🎯 **Success Criteria**
-
-### **Deployment Success:**
-- ✅ All health checks pass
-- ✅ Content generation works for all platforms
-- ✅ Validation system operational
-- ✅ SEO management functional
-- ✅ Performance within acceptable limits
-
-### **Quality Improvements:**
-- ✅ Enhanced content quality with validation
-- ✅ Platform-specific optimization
-- ✅ SEO keyword integration
-- ✅ Quality metrics and suggestions
-- ✅ Professional error handling
-
-## 🔮 **Future Enhancements**
-
-### **Planned Features:**
-- **Content Analytics** - Track content performance
-- **A/B Testing** - Test different prompt variations
-- **Custom Templates** - User-defined prompt templates
-- **Batch Processing** - Generate content for multiple topics
-- **API Rate Limiting** - Protect against abuse
 
 ---
 
-**🎉 Congratulations! Your AI Content Agent v2.0 is now deployed with professional-grade features and monitoring.**
+## 📊 **Monitoring & Maintenance**
+
+### **Health Check Endpoints:**
+- **Health:** `https://your-app.railway.app/api/health`
+- **System Info:** `https://your-app.railway.app/api/system-info`
+
+### **Railway Dashboard:**
+- **Monitor:** CPU, Memory, Network usage
+- **Logs:** Real-time application logs
+- **Metrics:** Request count, response times
+
+### **Cost Management:**
+- **Free Tier:** $5/month after free credits
+- **Production:** $5-20/month depending on usage
+- **Monitor:** Usage in Railway dashboard
+
+---
+
+## 🎯 **Next Steps After Deployment**
+
+1. **Test all platforms** with your deployed app
+2. **Set up custom domain** (optional)
+3. **Configure monitoring** and alerts
+4. **Set up automated backups** for Google Sheets data
+5. **Consider Redis** for session management if needed
+
+---
+
+## 📞 **Support**
+
+- **Railway Docs:** [docs.railway.app](https://docs.railway.app)
+- **Railway Discord:** [discord.gg/railway](https://discord.gg/railway)
+- **Your App Health:** `https://your-app.railway.app/api/health`
+
+---
+
+**🎉 Congratulations! Your AI Content Agent is now deployed and ready for production use!**

@@ -1,6 +1,64 @@
-node_modules/
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Environment variables
 .env
-.vercel
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Node modules (for frontend)
+ai-content-agent-ui/node_modules/
+ai-content-agent-ui/build/
+
+# Google OAuth (keep these for deployment)
+# client_secret.json
+# token.pickle
+
+# RAG system files (keep these for deployment)
+# barrana_rag_corpus.jsonl
+# barrana_rag_manifest.json

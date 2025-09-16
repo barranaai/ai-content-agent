@@ -16,6 +16,7 @@ from googleapiclient.discovery import build
 from prompt_library import BarranaPromptLibrary
 from validation import ContentValidator
 from seo_manager import SEOManager
+from rag_system import BarranaRAGSystem
 
 # Load environment variables
 load_dotenv()
@@ -32,22 +33,51 @@ FALLBACK_TO_SHEETS = os.environ.get('FALLBACK_TO_SHEETS', 'true').lower() == 'tr
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
+
+# CORS configuration for development and production
+allowed_origins = [
+    'http://localhost:3000', 
+    'http://localhost:3001',
+    'https://ai-content-agent-ui.vercel.app',  # Vercel frontend
+    'https://ai-content-agent-frontend.railway.app',  # Railway frontend
+]
+
+# Add Railway app URL if available
+railway_app_url = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if railway_app_url:
+    allowed_origins.append(f'https://{railway_app_url}')
+
+CORS(app, origins=allowed_origins)
 
 # Initialize new systems
 prompt_library = None
 validator = None
 seo_manager = None
+rag_system = None
 
 def initialize_new_systems():
     """Initialize the new JSON-based systems"""
-    global prompt_library, validator, seo_manager
+    global prompt_library, validator, seo_manager, rag_system
     
     try:
         if USE_JSON_LIBRARY:
             prompt_library = BarranaPromptLibrary()
             validator = ContentValidator(prompt_library)
             seo_manager = SEOManager(prompt_library)
+            
+            # Initialize RAG system (optional - will gracefully degrade if corpus not available)
+            rag_system = None
+            try:
+                rag_system = BarranaRAGSystem()
+                if rag_system.initialize():
+                    logging.info("✅ RAG system initialized successfully")
+                else:
+                    logging.warning("⚠️ RAG system initialization failed - continuing without RAG")
+                    rag_system = None
+            except Exception as e:
+                logging.warning(f"⚠️ RAG system not available: {e} - continuing without RAG")
+                rag_system = None
+            
             logging.info("✅ New JSON-based systems initialized successfully")
             return True
         else:
@@ -114,36 +144,44 @@ def fetch_prompts_legacy(service, sheet_id):
 # New API endpoints using JSON library
 @app.route('/api/topics')
 def api_get_topics():
-    """Get topics - uses JSON library if available, falls back to Google Sheets"""
+    """Get topics - ALWAYS from Google Sheets (topics come from sheets, prompts from JSON)"""
     try:
-        if prompt_library and prompt_library.is_loaded():
-            # Use JSON library - return available platforms as topics
-            platforms = prompt_library.get_available_platforms()
-            topics = []
-            for platform in platforms:
-                config = prompt_library.get_platform_config(platform)
-                topics.append({
-                    "topic": platform.title(),
-                    "description": f"Generate content for {platform} platform using {config['voice']}"
-                })
-            
-            logging.info(f"✅ Topics loaded from JSON library: {len(topics)} topics")
-            return jsonify(topics)
-        
-        elif FALLBACK_TO_SHEETS:
-            # Fallback to Google Sheets
-            service = get_google_sheets_service()
-            topics_sheet_id = '12qFx-0Si0-g8Hp_yq7sIm7I5gJiACaOaLep04dSYC_U'
-            topics = fetch_topics_legacy(service, topics_sheet_id)
-            logging.info(f"✅ Topics loaded from Google Sheets: {len(topics)} topics")
-            return jsonify(topics)
-        
-        else:
-            return jsonify({"error": "No data source available"}), 500
+        # Topics should ALWAYS come from Google Sheets
+        service = get_google_sheets_service()
+        topics_sheet_id = '12qFx-0Si0-g8Hp_yq7sIm7I5gJiACaOaLep04dSYC_U'
+        topics = fetch_topics_legacy(service, topics_sheet_id)
+        logging.info(f"✅ Topics loaded from Google Sheets: {len(topics)} topics")
+        return jsonify(topics)
             
     except Exception as e:
-        logging.error(f"❌ Error loading topics: {e}")
+        logging.error(f"❌ Error loading topics from Google Sheets: {e}")
         return jsonify({"error": f"Failed to load topics: {str(e)}"}), 500
+
+@app.route('/api/platforms')
+def api_get_platforms():
+    """Get available platforms from JSON library"""
+    try:
+        if prompt_library and prompt_library.is_loaded():
+            platforms = prompt_library.get_available_platforms()
+            # Return platforms with their display names
+            platform_list = []
+            for platform in platforms:
+                config = prompt_library.get_platform_config(platform)
+                platform_list.append({
+                    "key": platform,
+                    "name": platform.replace('_', ' ').title().replace('Quick', '').replace('Blog', '').strip(),
+                    "voice": config.get('voice', ''),
+                    "word_count": config.get('word_count', {})
+                })
+            
+            logging.info(f"✅ Platforms loaded from JSON library: {len(platform_list)} platforms")
+            return jsonify(platform_list)
+        else:
+            return jsonify({"error": "JSON library not available"}), 500
+            
+    except Exception as e:
+        logging.error(f"❌ Error loading platforms: {e}")
+        return jsonify({"error": f"Failed to load platforms: {str(e)}"}), 500
 
 @app.route('/api/platform-prompts')
 def api_get_prompts():
@@ -202,31 +240,43 @@ def api_generate_content():
             return jsonify({"error": "OpenAI API key not configured"}), 500
         
         results = {}
+        metrics = {}
         
         # Process each platform
         for platform in platforms:
             try:
                 if prompt_library and prompt_library.is_loaded():
                     # Use new JSON-based system
-                    result = generate_content_with_json_system(description, platform)
+                    result, platform_metrics = generate_content_with_json_system(description, platform)
                     results[platform] = result
+                    metrics[platform] = platform_metrics
                 else:
                     # Fallback to legacy system
                     result = generate_content_with_legacy_system(description, platform, prompts)
                     results[platform] = result
+                    # Basic metrics for legacy system
+                    metrics[platform] = {
+                        "word_count": len(result.split()),
+                        "cta_included": "cta" in result.lower() or "call to action" in result.lower(),
+                        "has_keywords": len(description.split()) > 0
+                    }
                     
             except Exception as e:
                 logging.error(f"❌ Error generating content for {platform}: {e}")
                 results[platform] = f"Error generating content: {str(e)}"
+                metrics[platform] = {"error": str(e)}
         
         logging.info(f"✅ Content generation completed for {len(results)} platforms")
-        return jsonify(results)
+        return jsonify({
+            "content": results,
+            "metrics": metrics
+        })
         
     except Exception as e:
         logging.error(f"❌ Error in content generation: {e}")
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-def generate_content_with_json_system(description: str, platform: str) -> str:
+def generate_content_with_json_system(description: str, platform: str) -> tuple:
     """Generate content using the new JSON-based system"""
     try:
         # Validate input
@@ -237,13 +287,32 @@ def generate_content_with_json_system(description: str, platform: str) -> str:
         # Get optimized keywords
         keywords = seo_manager.get_platform_optimized_keywords(platform, "general")
         
-        # Build prompt
+        # Get RAG context if available
+        rag_context = ""
+        if rag_system and rag_system.is_loaded:
+            try:
+                rag_context = rag_system.get_context(description, top_k=3, min_score=0.3)
+                if rag_context:
+                    logging.info(f"🔍 Retrieved RAG context for {platform}: {len(rag_context)} characters")
+                else:
+                    logging.info(f"ℹ️ No relevant RAG context found for {platform}")
+            except Exception as e:
+                logging.warning(f"⚠️ RAG context retrieval failed: {e}")
+                rag_context = ""
+        
+        # Build prompt with optional RAG context
         prompt = prompt_library.build_prompt(
             description=description,
             platform=platform,
             primary_keywords=keywords['primary'],
-            secondary_keywords=keywords['secondary']
+            secondary_keywords=keywords['secondary'],
+            rag_context=rag_context
         )
+        
+        # Log the prompt being sent (for debugging)
+        logging.info(f"🔍 Prompt being sent to OpenAI for {platform}:")
+        logging.info(f"📝 Prompt length: {len(prompt)} characters")
+        logging.info(f"📝 Prompt preview: {prompt[:500]}...")
         
         # Generate content with OpenAI
         response = client.chat.completions.create(
@@ -255,6 +324,17 @@ def generate_content_with_json_system(description: str, platform: str) -> str:
         
         content = response.choices[0].message.content
         
+        # Apply LinkedIn-specific optimizations if applicable
+        if platform in ['linkedin', 'linkedin_quick']:
+            try:
+                optimized_content = prompt_library.apply_linkedin_optimizations(content, description, platform)
+                if optimized_content != content:
+                    logging.info(f"🔧 Applied LinkedIn optimizations for {platform}")
+                    content = optimized_content
+            except Exception as e:
+                logging.warning(f"⚠️ LinkedIn optimization failed for {platform}: {e}")
+                # Continue with original content if optimization fails
+        
         # Validate output
         output_validation = validator.validate_output(content, platform)
         
@@ -262,16 +342,19 @@ def generate_content_with_json_system(description: str, platform: str) -> str:
         if not output_validation['valid']:
             logging.warning(f"⚠️ Content validation issues for {platform}: {output_validation['issues']}")
         
+        # Return all metrics including platform-specific ones
+        platform_metrics = output_validation['metrics']
+        
         # Return enhanced content with metadata
         enhanced_content = f"{content}\n\n---\n📊 Quality Metrics:\n"
-        enhanced_content += f"• Word count: {output_validation['metrics'].get('word_count', 0)}\n"
-        enhanced_content += f"• CTA included: {output_validation['metrics'].get('cta_included', False)}\n"
+        enhanced_content += f"• Word count: {platform_metrics['word_count']}\n"
+        enhanced_content += f"• CTA included: {platform_metrics['cta_included']}\n"
         enhanced_content += f"• Keywords used: {', '.join(keywords['primary'])}\n"
         
         if output_validation['suggestions']:
             enhanced_content += f"• Suggestions: {'; '.join(output_validation['suggestions'])}\n"
         
-        return enhanced_content
+        return enhanced_content, platform_metrics
         
     except Exception as e:
         logging.error(f"❌ JSON system generation failed for {platform}: {e}")
@@ -329,11 +412,13 @@ def api_system_info():
         "version": "2.0.0",
         "json_library_version": prompt_library.library.get('version') if prompt_library else None,
         "available_platforms": prompt_library.get_available_platforms() if prompt_library else [],
+        "rag_system": rag_system.get_stats() if rag_system else {"is_loaded": False},
         "features": {
             "validation": validator is not None,
             "seo_management": seo_manager is not None,
             "keyword_rotation": seo_manager is not None,
-            "quality_control": validator is not None
+            "quality_control": validator is not None,
+            "rag_enhancement": rag_system is not None and rag_system.is_loaded
         }
     }
     
@@ -345,4 +430,9 @@ if __name__ == '__main__':
     print(f"🔄 Google Sheets Fallback: {'✅ Enabled' if FALLBACK_TO_SHEETS else '❌ Disabled'}")
     print(f"🔧 Feature Flags: JSON={USE_JSON_LIBRARY}, Fallback={FALLBACK_TO_SHEETS}")
     
-    app.run(port=5050, debug=True)
+    # Get port from environment variable (Railway sets this)
+    port = int(os.environ.get('PORT', 5050))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    
+    print(f"🌐 Starting server on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=debug)
