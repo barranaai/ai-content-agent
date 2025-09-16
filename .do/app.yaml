@@ -1,0 +1,59 @@
+name: ai-content-agent
+services:
+- name: backend
+  source_dir: /
+  github:
+    repo: barranaai/ai-content-agent
+    branch: main
+  run_command: python app.py
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 5050
+  routes:
+  - path: /api
+  envs:
+  - key: FLASK_ENV
+    value: production
+  - key: PORT
+    value: "5050"
+  - key: USE_JSON_LIBRARY
+    value: "true"
+  - key: FALLBACK_TO_SHEETS
+    value: "true"
+  - key: OPENAI_API_KEY
+    value: ${OPENAI_API_KEY}
+  - key: GOOGLE_SHEETS_TOPICS_ID
+    value: ${GOOGLE_SHEETS_TOPICS_ID}
+  - key: GOOGLE_SHEETS_PROMPTS_ID
+    value: ${GOOGLE_SHEETS_PROMPTS_ID}
+
+- name: frontend
+  source_dir: /ai-content-agent-ui
+  github:
+    repo: barranaai/ai-content-agent
+    branch: main
+  build_command: npm install && npm run build
+  run_command: npx serve -s build -l 3000
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 3000
+  routes:
+  - path: /
+  envs:
+  - key: REACT_APP_API_URL
+    value: ${BACKEND_URL}/api
+  - key: NODE_ENV
+    value: production
+
+static_sites:
+- name: frontend-static
+  source_dir: /ai-content-agent-ui/build
+  github:
+    repo: barranaai/ai-content-agent
+    branch: main
+  build_command: cd ai-content-agent-ui && npm install && npm run build
+  routes:
+  - path: /
+  catchall_document: index.html
