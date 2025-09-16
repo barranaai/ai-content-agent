@@ -1,0 +1,66 @@
+{
+  "sources": {
+    "Detailed Overview of Barrana.docx": {
+      "name": "Detailed Overview of Barrana",
+      "sections": {
+        "Detailed Overview of Barrana.ai": {
+          "paragraphs": 3,
+          "chunks": 1
+        },
+        "General Questions": {
+          "paragraphs": 10,
+          "chunks": 1
+        },
+        "Services Questions": {
+          "paragraphs": 10,
+          "chunks": 1
+        },
+        "Technical & Implementation Questions": {
+          "paragraphs": 7,
+          "chunks": 1
+        },
+        "About the Founder": {
+          "paragraphs": 3,
+          "chunks": 1
+        },
+        "Problem-Solution Q&A": {
+          "paragraphs": 20,
+          "chunks": 2
+        }
+      },
+      "paragraphs": 53,
+      "chunks": 7
+    },
+    "Detailed Overview with Added Authority.docx": {
+      "name": "Detailed Overview with Added Authority",
+      "sections": {
+        "Introduction": {
+          "paragraphs": 1,
+          "chunks": 1
+        },
+        "Detailed Overview with Added Authority": {
+          "paragraphs": 1,
+          "chunks": 1
+        },
+        "Q&A Section with Added Emphasis on Experience": {
+          "paragraphs": 11,
+          "chunks": 2
+        }
+      },
+      "paragraphs": 13,
+      "chunks": 4
+    }
+  },
+  "sections": {
+    "Detailed Overview of Barrana.ai": 1,
+    "General Questions": 1,
+    "Services Questions": 1,
+    "Technical & Implementation Questions": 1,
+    "About the Founder": 1,
+    "Problem-Solution Q&A": 2,
+    "Introduction": 1,
+    "Detailed Overview with Added Authority": 1,
+    "Q&A Section with Added Emphasis on Experience": 2
+  },
+  "total_chunks": 11
+}

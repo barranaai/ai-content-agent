@@ -33,21 +33,7 @@ FALLBACK_TO_SHEETS = os.environ.get('FALLBACK_TO_SHEETS', 'true').lower() == 'tr
 
 # Initialize Flask app
 app = Flask(__name__)
-
-# CORS configuration for development and production
-allowed_origins = [
-    'http://localhost:3000', 
-    'http://localhost:3001',
-    'https://ai-content-agent-ui.vercel.app',  # Vercel frontend
-    'https://ai-content-agent-frontend.railway.app',  # Railway frontend
-]
-
-# Add Railway app URL if available
-railway_app_url = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
-if railway_app_url:
-    allowed_origins.append(f'https://{railway_app_url}')
-
-CORS(app, origins=allowed_origins)
+CORS(app, origins=['http://localhost:3000', 'http://localhost:3001'])
 
 # Initialize new systems
 prompt_library = None
@@ -430,9 +416,4 @@ if __name__ == '__main__':
     print(f"🔄 Google Sheets Fallback: {'✅ Enabled' if FALLBACK_TO_SHEETS else '❌ Disabled'}")
     print(f"🔧 Feature Flags: JSON={USE_JSON_LIBRARY}, Fallback={FALLBACK_TO_SHEETS}")
     
-    # Get port from environment variable (Railway sets this)
-    port = int(os.environ.get('PORT', 5050))
-    debug = os.environ.get('FLASK_ENV') == 'development'
-    
-    print(f"🌐 Starting server on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    app.run(port=5050, debug=True)
