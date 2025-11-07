@@ -1,0 +1,473 @@
+{
+    "goals_and_ethics": {
+      "primary_goals": [
+        "Generate natural-looking 15–20 comment clusters per post with 6 voices (Person A–E + Barrana).",
+        "Ensure threaded conversation with engagement triggers and subtle brand positioning.",
+        "Match tone to each platform (LinkedIn, Instagram, Facebook, TikTok)."
+      ],
+      "ethics_and_compliance": [
+        "Only use real accounts (no fake or impersonated profiles).",
+        "Use real or conservative claims (no fabricated testimonials).",
+        "Comply with platform terms of service.",
+        "Avoid aggressive sales language, personal data leaks, or medical/legal advice.",
+        "Disclose paid relationships where required."
+      ]
+    },
+    "barrana_business_context": {
+      "identity": "AI automation & custom software partner for SMBs.",
+      "services": [
+        "AI agents and workflow automation",
+        "WhatsApp/IG/LinkedIn lead flows",
+        "Web and mobile app development",
+        "Legacy system modernization",
+        "UX and product design"
+      ],
+      "industries": [
+        "Healthcare clinics",
+        "Restaurants",
+        "Real estate",
+        "E-commerce",
+        "Professional services"
+      ],
+      "tone": "Practical, collaborative, outcome-focused, not pushy.",
+      "proof_points": [
+        "13+ years building software",
+        "Outcome-based pricing",
+        "Improvements in lead response, reduced admin, less no-shows"
+      ],
+      "message_constraints": "Use conservative claims like 'typical results' or anonymized examples."
+    },
+    "personas": {
+      "person_a": {
+        "name": "The Curious One",
+        "voice": "Polite, practical, asks clarifying questions.",
+        "examples": [
+          "How would this work for a 3-person clinic?",
+          "Does this remove the human touch?"
+        ]
+      },
+      "person_b": {
+        "name": "The Skeptic",
+        "voice": "Raises doubts about cost, data, experience.",
+        "examples": [
+          "Is this safe for patient data?",
+          "Isn’t automation expensive for SMBs?"
+        ]
+      },
+      "person_c": {
+        "name": "The Insider",
+        "voice": "Shares first-hand experience or social proof.",
+        "examples": [
+          "We used Barrana — cut admin ~30%.",
+          "No-show rates dropped after reminders."
+        ]
+      },
+      "person_d": {
+        "name": "The Amplifier",
+        "voice": "Tags others, spreads visibility.",
+        "examples": [
+          "@Sara you were asking about this!",
+          "Forwarding this to my ops team."
+        ]
+      },
+      "person_e": {
+        "name": "The Cheerleader",
+        "voice": "Enthusiastic, short, emoji-rich.",
+        "examples": [
+          "🔥🔥 Love this!",
+          "Game changer 💯"
+        ]
+      },
+      "barrana": {
+        "name": "Barrana (Business Account)",
+        "voice": "Authoritative, helpful, clarifying.",
+        "examples": [
+          "We configure escalation for out-of-script requests.",
+          "We integrate via APIs and test in pilot phases.",
+          "Feel free to DM for a quick overview."
+        ]
+      }
+    },
+    "master_prompt": {
+      "instructions": "Use this template whenever Barrana posts on any platform.",
+      "content": "Generate a platform-specific comment cluster of 15–20 comments using personas A-E and Barrana...",
+      "requirements": {
+        "comments_count": "15–20",
+        "platform_specific": true,
+        "reply_logic": [
+          "≥50% replies (not top-level).",
+          "Barrana replies to each persona at least once.",
+          "Barrana replies to Person B twice.",
+          "Person D tags 1–2 external handles.",
+          "Person C cites at least one benefit/result.",
+          "Person E uses emojis in ≥50% of their comments."
+        ],
+        "formatting": "JSON + CSV",
+        "cta_style": "Soft CTAs only (DM us, link in bio, etc)",
+        "no_fake_claims": true,
+        "no_duplicate_text": true
+      },
+      "json_schema_template": {
+        "platform": "<linkedin|instagram|facebook|tiktok>",
+        "post_reference": "<post id or excerpt>",
+        "comments": [
+          {
+            "id": "c1",
+            "speaker": "Person A",
+            "type": "new",
+            "reply_to": null,
+            "text": "Example text here...",
+            "tone": "curious",
+            "suggested_delay_seconds": 30,
+            "tags": []
+          }
+        ],
+        "meta": {
+          "total_comments": 0,
+          "percent_replies": 0,
+          "barrana_replies_count": 0,
+          "amplifier_tags_count": 0
+        }
+      },
+      "csv_format_fields": [
+        "CommentID",
+        "Speaker",
+        "ParentCommentID",
+        "Text",
+        "SuggestedDelaySeconds",
+        "Tone",
+        "Tags",
+        "Platform",
+        "Notes"
+      ]
+    },
+    "platform_specific_addons": {
+      "linkedin": {
+        "tone": "Professional, data-driven, 1–3 paragraphs max.",
+        "emoji_usage": "Minimal (0–1 per thread).",
+        "delays": "New comments 1–5 min, replies 60–240 sec."
+      },
+      "instagram": {
+        "tone": "Playful, short, emoji-rich.",
+        "emoji_usage": "High (3–8 per thread).",
+        "delays": "New comments 0–3 min, replies 20–90 sec."
+      },
+      "facebook": {
+        "tone": "Friendly, anecdotal, 1–3 sentences.",
+        "emoji_usage": "Moderate.",
+        "delays": "New comments 2–10 min, replies 45–180 sec."
+      },
+      "tiktok": {
+        "tone": "Slang-heavy, short, meme-like.",
+        "emoji_usage": "High.",
+        "delays": "New comments 0–2 min, replies 10–50 sec."
+      }
+    },
+    "reply_logic_and_structure": {
+      "threads": [
+        "At least half of comments must be replies.",
+        "Limit consecutive comments by same persona.",
+        "Randomize starter persona.",
+        "Limit deep nesting (max 3 replies per parent).",
+        "Barrana must show presence across the entire thread."
+      ]
+    },
+    "timing_and_cadence": {
+      "instagram": {
+        "initial_comments": "0–3 min",
+        "replies": "20–90 sec",
+        "rollout_duration": "10–15 min"
+      },
+      "tiktok": {
+        "initial_comments": "0–2 min",
+        "replies": "10–50 sec",
+        "rollout_duration": "5–8 min"
+      },
+      "linkedin": {
+        "initial_comments": "1–5 min",
+        "replies": "60–240 sec",
+        "rollout_duration": "20–60 min"
+      },
+      "facebook": {
+        "initial_comments": "2–10 min",
+        "replies": "45–180 sec",
+        "rollout_duration": "15–45 min"
+      }
+    },
+    "output_requirements": {
+      "format": "JSON + CSV",
+      "handoff": "Team posts according to suggested delays and parentCommentId structure."
+    },
+    "variation_rules": {
+      "randomize_starter": true,
+      "vary_phrasing": true,
+      "mix_sentence_lengths": true,
+      "avoid_repeated_lines": true,
+      "use_contractions": true
+    },
+    "safety_and_moderation": {
+      "no_fake_endorsements": true,
+      "no_personal_data": true,
+      "no_illegal_promises": true,
+      "handle_negative_replies": "Pause seeding, respond neutrally via Barrana, escalate if needed.",
+      "audit_logging": "Keep records for 90 days."
+    },
+    "kpis_and_ab_testing": {
+      "metrics": [
+        "Organic replies",
+        "Impressions/reach lift",
+        "Profile/link clicks",
+        "DMs or leads",
+        "Sentiment"
+      ],
+      "ab_test_examples": [
+        "Barrana reply timing (early vs late)",
+        "Tone of insider benefit (numeric vs general)",
+        "Starter persona variations"
+      ]
+    },
+    "sentence_banks": {
+      "person_a_question_starters": [
+        "Quick question:",
+        "Curious about this:",
+        "Can someone explain",
+        "I'm wondering",
+        "Help me understand",
+        "Not clear on",
+        "Does anyone know",
+        "Anyone tried",
+        "What's the deal with",
+        "How exactly does",
+        "Walk me through",
+        "Can you clarify",
+        "I'd love to know more about",
+        "This might be obvious but",
+        "Probably a dumb question, but"
+      ],
+      "person_a_questions": [
+        "how would this scale for a 2-3 person team?",
+        "what's the learning curve like?",
+        "can this integrate with our existing tools?",
+        "is there a minimum team size needed?",
+        "does this work for boutique operations?",
+        "what happens if something breaks?",
+        "how long does implementation take?",
+        "do you need technical staff to run it?",
+        "what if we don't have a CRM yet?",
+        "is this more for enterprises or SMBs?",
+        "can we trial it before committing?",
+        "what's the setup process look like?",
+        "how hands-on is the maintenance?",
+        "does this work with legacy systems?",
+        "what kind of ROI timeline are we talking?"
+      ],
+      "person_b_skeptical_openers": [
+        "I'm skeptical.",
+        "Not sure I buy this.",
+        "Sounds good on paper, but",
+        "Devil's advocate here:",
+        "Hold on,",
+        "Wait a second,",
+        "Color me doubtful,",
+        "I've heard this before.",
+        "Here's my concern:",
+        "Red flag for me:",
+        "Unpopular opinion:",
+        "Am I the only one worried about",
+        "This raises questions.",
+        "I have my doubts."
+      ],
+      "person_b_concerns": [
+        "what about data security?",
+        "isn't this just another expense?",
+        "how do you prevent data breaches?",
+        "what about compliance with regulations?",
+        "doesn't this remove the human element?",
+        "what if customers hate talking to bots?",
+        "how is this different from other solutions?",
+        "what happens when the AI makes a mistake?",
+        "aren't we just adding complexity?",
+        "what about vendor lock-in?",
+        "how reliable is this really?",
+        "what's the catch here?",
+        "is this actually worth the investment?",
+        "what if it doesn't work for our industry?",
+        "who maintains this when things go wrong?"
+      ],
+      "person_c_result_metrics": [
+        "cut admin time by 22%",
+        "reduced no-shows by 40%",
+        "saw ROI within 6 weeks",
+        "saved 15 hours per week",
+        "increased response time by 3x",
+        "freed up 2 full-time equivalents",
+        "improved customer satisfaction by 35%",
+        "recovered about $8K in lost revenue",
+        "eliminated 90% of manual data entry",
+        "reduced errors by half",
+        "got payback in under 2 months",
+        "boosted conversions by 28%",
+        "cut costs by roughly $2K/month",
+        "saw results in the first 3 weeks",
+        "noticed improvement almost immediately"
+      ],
+      "person_c_testimonial_starters": [
+        "We've been using this for",
+        "Real talk:",
+        "From experience:",
+        "Just to add some context:",
+        "We implemented this last",
+        "Actual user here:",
+        "Been running this for",
+        "Our team switched to this",
+        "Full disclosure, we're clients, but",
+        "We piloted this and",
+        "After 6 months with this,",
+        "Deployed this in our",
+        "We rolled this out and",
+        "Coming from someone who's used it,"
+      ],
+      "person_d_tag_phrases": [
+        "you need to see this",
+        "this is exactly what you were asking about",
+        "remember when we talked about this?",
+        "forwarding this to you",
+        "check this out",
+        "might be worth exploring",
+        "could solve that problem you mentioned",
+        "thought of you when I saw this",
+        "this could be a game changer for",
+        "tagging you because",
+        "you should definitely look into this",
+        "wanted to make sure you saw this",
+        "dropping this here for you"
+      ],
+      "person_e_emoji_combos": [
+        "🔥🔥",
+        "💯👏",
+        "🚀✨",
+        "🙌💪",
+        "👀💡",
+        "⚡️🎯",
+        "🤯🔥",
+        "💥👊",
+        "✅🎉",
+        "🌟💫",
+        "🏆🔥",
+        "💪🚀",
+        "🎯💯"
+      ],
+      "person_e_reactions": [
+        "This!",
+        "Exactly!",
+        "Yes!",
+        "Love this",
+        "So needed",
+        "This is it",
+        "Game changer",
+        "Mind blown",
+        "Huge fan",
+        "This slaps",
+        "No notes",
+        "Chef's kiss",
+        "Absolute fire",
+        "Here for this",
+        "All day every day"
+      ],
+      "barrana_response_security": [
+        "We encrypt everything end-to-end and comply with SOC 2 standards.",
+        "Data security is baked in from day one - we've had third-party audits.",
+        "We're HIPAA-compliant and use enterprise-grade encryption.",
+        "Security isn't an afterthought - it's our foundation. Happy to share our security whitepaper.",
+        "We use AWS with multi-layer encryption. Your data stays yours.",
+        "Our infrastructure passed a penetration test last quarter. Security is non-negotiable.",
+        "We're certified under ISO 27001 for information security management.",
+        "Valid concern! We implement role-based access control and full audit logs.",
+        "We take security seriously - bank-level encryption, zero-knowledge architecture.",
+        "Good question. We're compliant with GDPR, CCPA, and industry-specific regulations."
+      ],
+      "barrana_response_cost": [
+        "ROI typically happens in 8-12 weeks for most SMBs.",
+        "We offer outcome-based pricing - you pay based on results, not hours.",
+        "Initial investment, yes. But clients typically save 2-3x that in reduced overhead.",
+        "Fair point. The cost of NOT automating is usually higher - missed leads, errors, staff burnout.",
+        "We have flexible pricing for SMBs. Many clients break even within the first quarter.",
+        "Think of it as hiring a 24/7 team member who never calls in sick - the math works out.",
+        "We've worked with teams as small as 3 people. Pricing scales to your size.",
+        "Most clients see cost savings within 60 days from reduced manual work.",
+        "The real cost is losing customers to competitors who respond faster. We fix that.",
+        "We can start with a pilot to prove ROI before you commit to a full rollout."
+      ],
+      "barrana_response_how_it_works": [
+        "We integrate with your existing stack via APIs - no rip-and-replace.",
+        "Setup typically takes 1-2 weeks including testing and training.",
+        "We map your current workflow, identify bottlenecks, then automate the repetitive parts.",
+        "Think of it as adding a smart layer on top of what you already use.",
+        "We start with a pilot phase - usually one workflow - then expand from there.",
+        "Our team handles the technical setup. You focus on your business.",
+        "We build custom flows based on your specific processes, not one-size-fits-all.",
+        "Integration is straightforward - most clients are up and running in under 3 weeks.",
+        "We can work with whatever tools you're using now - CRM, calendar, email, etc.",
+        "No coding required on your end. We handle all the technical heavy lifting."
+      ],
+      "barrana_response_results": [
+        "That's exactly the kind of outcome we aim for! Glad it's working well for you.",
+        "Love hearing this! When teams save time, they can focus on what actually matters.",
+        "Results like yours are why we do this. Thanks for sharing!",
+        "That's a solid win! Many of our clients see similar improvements.",
+        "Appreciate you sharing your experience. Real-world results speak louder than marketing.",
+        "This is the impact we're after. Efficiency gains that actually move the needle.",
+        "Thanks for the feedback! Stories like this help other businesses see what's possible.",
+        "That's fantastic! The ripple effects of automation are always impressive.",
+        "Great to hear! Time savings like that compound over months and years.",
+        "We're thrilled it's delivering value. Your success is our success."
+      ]
+    },
+    "uniqueness_enforcement": {
+      "max_phrase_reuse": 2,
+      "similarity_threshold": 0.7,
+      "banned_repetitive_phrases": [
+        "data security is our top priority",
+        "great question",
+        "glad to hear",
+        "how would this work for a small",
+        "cut admin by 30%",
+        "reduce costs with AI automation"
+      ],
+      "randomization_rules": [
+        "Never use the same question structure twice in one thread",
+        "Vary Barrana's opening words (avoid 'Great question!' repeatedly)",
+        "Mix metric formats: percentages, time saved, dollar amounts, qualitative",
+        "Rotate persona dominance: different personas should lead different posts",
+        "Use different cities and regions across posts",
+        "Vary comment lengths even within same persona",
+        "Change the order of concern topics (cost, security, usability)"
+      ]
+    },
+    "example_thread_linkedin": {
+      "total_comments": 20,
+      "notes": "Includes mapped replies with speaker and parent reference."
+    },
+    "final_agent_prompt_template": {
+      "structure": [
+        "Insert post text",
+        "Include MASTER PROMPT",
+        "Add PLATFORM ADD-ON",
+        "Output JSON + CSV",
+        "Include Handoff notes"
+      ]
+    },
+    "handoff_checklist": [
+      "Verify real account identities.",
+      "Post using CSV delays.",
+      "Respond to organic users first.",
+      "Log timestamps.",
+      "Stop if negative pushback occurs."
+    ],
+    "troubleshooting": {
+      "robotic_threads": "Increase variation and paraphrasing.",
+      "platform_flags": "Slow posting cadence, avoid repetition.",
+      "low_engagement": "Change starter persona, use stronger insider proof."
+    }
+  }
+  

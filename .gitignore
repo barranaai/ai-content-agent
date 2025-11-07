@@ -194,3 +194,20 @@ token.pickle
 # RAG system files (keep these for functionality)
 # barrana_rag_corpus.jsonl
 # barrana_rag_manifest.json
+
+# Deployment artifacts
+*.tar.gz
+*.zip
+ai-content-agent-*.conf
+backup-*.tar.gz
+hotfix*.tar.gz
+deploy-*.sh
+!test-deployment.sh
+
+# Legacy files
+app_legacy.py
+app_new.py
+
+# Test files (optional - comment out if you want to keep them)
+# test_*.py
+# *_test.py

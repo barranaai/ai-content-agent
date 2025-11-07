@@ -1,0 +1,61 @@
+# Render ignore file - files not needed in deployment
+
+# Development files
+*.tar.gz
+*.pyc
+__pycache__/
+.DS_Store
+
+# Local environment
+.env
+token.pickle
+client_secret.json
+
+# Testing
+test_*.py
+*_test.py
+comprehensive_*.py
+
+# Documentation (keep main README)
+DEPLOYMENT_INSTRUCTIONS.md
+ENGAGEMENT_IMPROVEMENTS.md
+UNIQUENESS_SYSTEM.md
+COMPREHENSIVE_PLATFORM_ANALYSIS_REPORT.md
+PLATFORM_COMPLIANCE_REPORT.md
+PROMPT_ENHANCEMENT_VERIFICATION_REPORT.md
+comprehensive_platform_test_report.md
+
+# Deployment scripts for other platforms
+deploy-*.sh
+ai-content-agent-*.conf
+
+# Backup files
+*backup*.tar.gz
+hotfix*.tar.gz
+improved-engagement*.tar.gz
+uniqueness-system*.tar.gz
+FINAL-FIX*.tar.gz
+complete-fix*.tar.gz
+app_legacy.py
+app_new.py
+app-update.tar.gz
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+flask_*.log
+
+# Node modules (will be built during deployment)
+ai-content-agent-ui/node_modules/
+ai-content-agent-ui/build/
+

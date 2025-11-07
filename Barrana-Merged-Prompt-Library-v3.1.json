@@ -1,3 +1,5 @@
+
+
 {
   "meta": {
     "title": "Barrana AI Content Agent - Complete Production-Ready Prompt Library",
@@ -16,7 +18,7 @@
   "seo": {
     "primary_keywords": [
       "AI automation for small business",
-      "Workflow automation small business",
+      "Workflow automation small business", 
       "Reduce costs with AI automation",
       "Business process automation for SMB",
       "AI increase small business revenue",
@@ -670,5 +672,118 @@
     "word_count_min": "Minimum word count for the platform",
     "word_count_max": "Maximum word count for the platform",
     "hashtags": "Platform-specific hashtag suggestions"
+  },
+  "engagement_system": {
+    "description": "Multi-profile engagement package generation for social media platforms",
+    "enabled_platforms": [
+      "facebook",
+      "instagram", 
+      "tiktok",
+      "linkedin"
+    ],
+    "comment_generation": {
+      "count_range": [5, 7],
+      "platform_specific_guidelines": {
+        "facebook": "Use casual, conversational tone. Include personal experiences, family/business connections. Use emojis sparingly. Comments are typically 1-3 sentences.",
+        "instagram": "Use engaging, visual language. Include relevant hashtags occasionally. Comments are often shorter, more visual-focused. Use emojis naturally.",
+        "linkedin": "Use professional, business-focused tone. Include industry insights, metrics, and professional experiences. Comments are typically 2-4 sentences, more detailed.",
+        "tiktok": "Use casual, trendy language. Include current slang and references. Comments are typically short, punchy, and engaging. Use emojis frequently."
+      },
+      "comment_types": {
+        "supportive": {
+          "description": "Positive, enthusiastic comment from someone who found value",
+          "template": "Create a natural, supportive comment from a {industry} business owner. Make it sound like a real person sharing their genuine experience or excitement. Include specific, relatable details about their business situation. Avoid generic phrases. Use natural language that matches how people actually comment on {platform}.",
+          "tone": "enthusiastic, personal, specific",
+          "avoid_phrases": ["This is great!", "Amazing content!", "Love this!", "So helpful!"]
+        },
+        "questioning": {
+          "description": "Thoughtful question from someone interested in implementing",
+          "template": "Generate a realistic question from someone in {industry} who is genuinely curious about implementation. Make it sound like a real business owner with specific concerns or needs. Include industry-specific details and practical considerations. Use natural questioning language appropriate for {platform}.",
+          "tone": "curious, professional, specific",
+          "avoid_phrases": ["How do I get started?", "What's the cost?", "Tell me more"]
+        },
+        "sharing_experience": {
+          "description": "Comment from someone who has tried similar approaches",
+          "template": "Create a comment from someone in {industry} who has real experience with similar solutions. Include specific details about what worked, what didn't, and lessons learned. Make it sound authentic with realistic challenges and successes. Use conversational language that matches {platform} style.",
+          "tone": "experienced, balanced, detailed",
+          "avoid_phrases": ["I tried this and it worked", "Great results", "Highly recommend"]
+        },
+        "skeptical": {
+          "description": "Skeptical comment from someone concerned about costs/complexity",
+          "template": "Generate a realistic skeptical comment from a {industry} business owner with legitimate concerns. Focus on practical business worries like costs, time, complexity, or ROI. Make it sound like genuine business considerations, not just negativity. Use respectful, questioning tone appropriate for {platform}.",
+          "tone": "concerned, practical, questioning",
+          "avoid_phrases": ["This won't work", "Too expensive", "Not worth it"]
+        },
+        "enthusiastic": {
+          "description": "Very excited comment from someone ready to try",
+          "template": "Create an enthusiastic comment from someone in {industry} who is genuinely excited about the potential. Show authentic excitement with specific reasons why this appeals to them. Include personal motivation or business goals. Use natural enthusiastic language that fits {platform} culture.",
+          "tone": "excited, eager, positive",
+          "avoid_phrases": ["This is amazing!", "I'm so excited!", "Can't wait to try!"]
+        },
+        "detailed_question": {
+          "description": "Technical question from someone ready to implement",
+          "template": "Generate a detailed, technical question from someone in {industry} who is serious about implementation. Include specific technical concerns, integration questions, or industry-specific challenges. Make it sound like someone who has done their research and is ready to move forward. Use professional language appropriate for {platform}.",
+          "tone": "technical, detailed, implementation-focused",
+          "avoid_phrases": ["How does this work?", "What's the process?", "Can you explain?"]
+        },
+        "success_story": {
+          "description": "Success story from someone who has seen results",
+          "template": "Create a success story comment from someone in {industry} who has implemented similar solutions. Include specific, realistic metrics and improvements. Make it sound like a genuine testimonial with concrete details about their experience. Use natural storytelling language that fits {platform} style.",
+          "tone": "successful, specific, encouraging",
+          "avoid_phrases": ["Amazing results!", "Game changer!", "Best decision ever!"]
+        }
+      },
+      "uniqueness_guidelines": [
+        "Each comment should have a different perspective, industry role, or business size",
+        "Vary the comment length and structure",
+        "Use different vocabulary and phrasing patterns",
+        "Include different specific details and examples",
+        "Ensure comments don't repeat similar points or experiences",
+        "Make each comment sound like it's from a different person"
+      ]
+    },
+    "response_generation": {
+      "barrana_voice": "Respond as Barrana with expertise, helpfulness, and industry knowledge. Keep responses professional but approachable. Always add value and encourage further engagement.",
+      "response_strategies": {
+        "supportive": "Acknowledge their situation, validate their experience, and offer additional value or resources that could help them further.",
+        "questioning": "Provide a helpful, actionable answer with specific advice. Include relevant examples or case studies when possible.",
+        "sharing_experience": "Validate their experience, acknowledge both successes and challenges, and offer insights or improvements based on your expertise.",
+        "skeptical": "Address their concerns directly with facts, examples, and case studies. Show understanding of their position while providing evidence.",
+        "enthusiastic": "Encourage their enthusiasm, provide clear next steps, and offer to help them get started with specific guidance.",
+        "detailed_question": "Give a comprehensive technical answer with implementation tips, potential challenges, and best practices for their specific situation.",
+        "success_story": "Celebrate their success, ask for more details to help others, and offer to share their story or connect them with similar businesses."
+      },
+      "response_guidelines": [
+        "Always maintain Barrana's professional yet approachable voice",
+        "Include specific, actionable advice when possible",
+        "Reference relevant industry examples or case studies",
+        "Encourage further engagement and conversation",
+        "Offer additional resources or next steps",
+        "Keep responses concise but valuable (2-3 sentences)",
+        "Use industry-specific terminology appropriately",
+        "Always end with a question or call-to-action when appropriate"
+      ]
+    },
+    "industry_detection": {
+      "description": "Extract industry context from content descriptions for relevant comment generation",
+      "common_industries": [
+        "restaurant",
+        "retail",
+        "e-commerce", 
+        "consulting",
+        "healthcare",
+        "real_estate",
+        "fitness",
+        "beauty",
+        "automotive",
+        "technology",
+        "finance",
+        "education",
+        "manufacturing",
+        "construction",
+        "hospitality",
+        "professional_services"
+      ]
+    }
   }
 }

@@ -4,7 +4,7 @@ import pickle
 import json
 import logging
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -38,6 +38,7 @@ app = Flask(__name__)
 allowed_origins = [
     'http://localhost:3000', 
     'http://localhost:3001',
+    'http://191.101.233.56',
 ]
 
 # Add DigitalOcean App Platform URL if available
@@ -245,13 +246,21 @@ def api_generate_content():
             try:
                 if prompt_library and prompt_library.is_loaded():
                     # Use new JSON-based system
-                    result, platform_metrics = generate_content_with_json_system(description, platform)
-                    results[platform] = result
+                    result, platform_metrics, engagement_package = generate_content_with_json_system(description, platform)
                     metrics[platform] = platform_metrics
+                    
+                    # Always structure the result as an object for consistency
+                    results[platform] = {
+                        'main_content': result,
+                        'engagement': engagement_package if engagement_package else None
+                    }
                 else:
                     # Fallback to legacy system
                     result = generate_content_with_legacy_system(description, platform, prompts)
-                    results[platform] = result
+                    results[platform] = {
+                        'main_content': result,
+                        'engagement': None
+                    }
                     # Basic metrics for legacy system
                     metrics[platform] = {
                         "word_count": len(result.split()),
@@ -261,7 +270,10 @@ def api_generate_content():
                     
             except Exception as e:
                 logging.error(f"❌ Error generating content for {platform}: {e}")
-                results[platform] = f"Error generating content: {str(e)}"
+                results[platform] = {
+                    'main_content': f"Error generating content: {str(e)}",
+                    'engagement': None
+                }
                 metrics[platform] = {"error": str(e)}
         
         logging.info(f"✅ Content generation completed for {len(results)} platforms")
@@ -316,7 +328,7 @@ def generate_content_with_json_system(description: str, platform: str) -> tuple:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=800,
+            max_tokens=1000,
             temperature=0.7
         )
         
@@ -343,6 +355,20 @@ def generate_content_with_json_system(description: str, platform: str) -> tuple:
         # Return all metrics including platform-specific ones
         platform_metrics = output_validation['metrics']
         
+        # Generate engagement package for social media platforms
+        engagement_package = {}
+        if prompt_library.is_engagement_enabled_for_platform(platform):
+            try:
+                engagement_package = prompt_library.generate_engagement_package(
+                    content, platform, description
+                )
+                # Get comment count from either new format (meta.total_comments) or old format (comments_count)
+                comment_count = engagement_package.get('meta', {}).get('total_comments', engagement_package.get('comments_count', 0))
+                logging.info(f"✅ Generated engagement package for {platform}: {comment_count} comments")
+            except Exception as e:
+                logging.warning(f"⚠️ Failed to generate engagement package for {platform}: {e}")
+                engagement_package = {}
+        
         # Return enhanced content with metadata
         enhanced_content = f"{content}\n\n---\n📊 Quality Metrics:\n"
         enhanced_content += f"• Word count: {platform_metrics['word_count']}\n"
@@ -352,7 +378,7 @@ def generate_content_with_json_system(description: str, platform: str) -> tuple:
         if output_validation['suggestions']:
             enhanced_content += f"• Suggestions: {'; '.join(output_validation['suggestions'])}\n"
         
-        return enhanced_content, platform_metrics
+        return enhanced_content, platform_metrics, engagement_package
         
     except Exception as e:
         logging.error(f"❌ JSON system generation failed for {platform}: {e}")
@@ -379,6 +405,23 @@ def generate_content_with_legacy_system(description: str, platform: str, prompts
     except Exception as e:
         logging.error(f"❌ Legacy system generation failed for {platform}: {e}")
         raise
+
+# Serve React Frontend
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react(path):
+    """Serve React frontend or API routes"""
+    # If path starts with 'api/', let it fall through to API routes
+    if path.startswith('api/'):
+        return jsonify({"error": "API endpoint not found"}), 404
+    
+    # Serve static files from React build
+    build_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ai-content-agent-ui', 'build')
+    
+    if path and os.path.exists(os.path.join(build_dir, path)):
+        return send_from_directory(build_dir, path)
+    else:
+        return send_file(os.path.join(build_dir, 'index.html'))
 
 # Health check endpoint
 @app.route('/api/health')
@@ -421,6 +464,48 @@ def api_system_info():
     }
     
     return jsonify(info)
+
+# Engagement package endpoint
+@app.route('/api/engagement-package', methods=['POST'])
+def api_generate_engagement_package():
+    """Generate engagement package for a specific platform and content"""
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        # Extract data
+        main_content = data.get('main_content')
+        platform = data.get('platform')
+        description = data.get('description')
+        
+        if not main_content or not platform or not description:
+            return jsonify({"error": "Missing required data: main_content, platform, or description"}), 400
+        
+        if not prompt_library or not prompt_library.is_loaded():
+            return jsonify({"error": "Prompt library not available"}), 500
+        
+        if not prompt_library.is_engagement_enabled_for_platform(platform):
+            return jsonify({"error": f"Engagement system not enabled for platform: {platform}"}), 400
+        
+        # Generate engagement package
+        engagement_package = prompt_library.generate_engagement_package(
+            main_content, platform, description
+        )
+        
+        if not engagement_package:
+            return jsonify({"error": "Failed to generate engagement package"}), 500
+        
+        logging.info(f"✅ Generated engagement package for {platform}: {engagement_package.get('comments_count', 0)} comments")
+        
+        return jsonify({
+            "success": True,
+            "engagement_package": engagement_package
+        })
+        
+    except Exception as e:
+        logging.error(f"❌ Error generating engagement package: {e}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     print("🚀 Starting AI Content Agent v2.0")

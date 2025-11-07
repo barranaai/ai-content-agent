@@ -19,6 +19,179 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import PlatformSpecificMetrics from './PlatformSpecificMetrics';
 
+// Engagement Pair Component
+// Old EngagementPair component for backwards compatibility
+const EngagementPair = ({ comment, response, index }) => (
+  <Box 
+    sx={{ 
+      marginBottom: 2, 
+      padding: 2, 
+      background: 'rgba(255,255,255,0.1)',
+      borderRadius: 2,
+      border: '1px solid rgba(255,255,255,0.2)'
+    }}
+  >
+    <Typography variant="body2" sx={{ color: '#4ECDC4', marginBottom: 1, fontWeight: 'bold' }}>
+      Comment {index}:
+    </Typography>
+    <Typography variant="body2" sx={{ color: 'white', marginBottom: 2, fontStyle: 'italic' }}>
+      "{comment}"
+    </Typography>
+    
+    <Typography variant="body2" sx={{ color: '#FFD700', marginBottom: 1, fontWeight: 'bold' }}>
+      Barrana Response:
+    </Typography>
+    <Typography variant="body2" sx={{ color: 'white' }}>
+      {response}
+    </Typography>
+  </Box>
+);
+
+// New ThreadedComment component for comments-engine.json format
+const ThreadedComment = ({ comment, indent = 0, replies, allComments }) => {
+  const getPersonaColor = (speaker) => {
+    const colors = {
+      'Person A': '#4ECDC4',  // Curious - Cyan
+      'Person B': '#FF6B6B',  // Skeptic - Red
+      'Person C': '#95E1D3',  // Insider - Mint
+      'Person D': '#F38181',  // Amplifier - Pink
+      'Person E': '#FFD93D',  // Cheerleader - Yellow
+      'Barrana': '#FFD700'     // Barrana - Gold
+    };
+    return colors[speaker] || '#FFFFFF';
+  };
+
+  const getPersonaIcon = (speaker) => {
+    const icons = {
+      'Person A': '❓',
+      'Person B': '🤔',
+      'Person C': '💡',
+      'Person D': '📢',
+      'Person E': '🔥',
+      'Barrana': '🏢'
+    };
+    return icons[speaker] || '💬';
+  };
+
+  return (
+    <Box sx={{ marginLeft: indent * 3 }}>
+      <Box 
+        sx={{ 
+          marginBottom: 1.5, 
+          padding: 1.5, 
+          background: comment.speaker === 'Barrana' ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255,255,255,0.08)',
+          borderRadius: 2,
+          borderLeft: `3px solid ${getPersonaColor(comment.speaker)}`
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 0.5 }}>
+          <Typography variant="body2" sx={{ color: getPersonaColor(comment.speaker), fontWeight: 'bold' }}>
+            {getPersonaIcon(comment.speaker)} {String(comment.speaker || 'Unknown')}
+          </Typography>
+          {comment.type === 'reply' && (
+            <Typography variant="caption" sx={{ color: '#888', marginLeft: 1 }}>
+              (Reply)
+            </Typography>
+          )}
+        </Box>
+        <Typography variant="body2" sx={{ color: 'white' }}>
+          {String(comment.text || '')}
+        </Typography>
+        {comment.tags && Array.isArray(comment.tags) && comment.tags.length > 0 && (
+          <Box sx={{ marginTop: 0.5 }}>
+            {comment.tags.map((tag, i) => (
+              <Typography key={i} variant="caption" sx={{ color: '#4ECDC4', marginRight: 1 }}>
+                {String(tag)}
+              </Typography>
+            ))}
+          </Box>
+        )}
+      </Box>
+      {/* Render replies recursively */}
+      {replies && replies.length > 0 && (
+        <Box sx={{ marginLeft: 2, borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: 1 }}>
+          {replies.map((reply, idx) => {
+            const replyReplies = allComments.filter(c => c.reply_to === reply.id);
+            return (
+              <ThreadedComment 
+                key={reply.id} 
+                comment={reply} 
+                indent={0}
+                replies={replyReplies}
+                allComments={allComments}
+              />
+            );
+          })}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+// ThreadedEngagement component to display the new format
+const ThreadedEngagementDisplay = ({ engagement }) => {
+  if (!engagement || !engagement.comments) {
+    return null;
+  }
+
+  // Ensure comments is an array
+  if (!Array.isArray(engagement.comments)) {
+    console.error('engagement.comments is not an array:', engagement.comments);
+    return null;
+  }
+
+  // Separate top-level comments from replies
+  const topLevelComments = engagement.comments.filter(c => !c.reply_to || c.reply_to === null);
+  const allComments = engagement.comments;
+
+  return (
+    <Box sx={{ marginTop: 3 }}>
+      <Typography 
+        variant="h5" 
+        component="div"
+        sx={{ 
+          color: 'white', 
+          marginBottom: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}
+      >
+        💬 Engagement Package ({engagement.meta?.total_comments || engagement.comments.length} comments)
+      </Typography>
+
+      {/* Meta Information */}
+      {engagement.meta && (
+        <Box sx={{ 
+          marginBottom: 2, 
+          padding: 1.5, 
+          background: 'rgba(255,255,255,0.05)', 
+          borderRadius: 2 
+        }}>
+          <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
+            Platform: {String(engagement.meta.platform || '')} | 
+            Replies: {Number(engagement.meta.percent_replies || 0).toFixed(1)}% | 
+            Barrana Responses: {Number(engagement.meta.barrana_replies_count || 0)}
+          </Typography>
+        </Box>
+      )}
+
+      {/* Render threaded comments */}
+      {topLevelComments.map((comment) => {
+        const replies = allComments.filter(c => c.reply_to === comment.id);
+        return (
+          <ThreadedComment 
+            key={comment.id} 
+            comment={comment} 
+            replies={replies}
+            allComments={allComments}
+          />
+        );
+      })}
+    </Box>
+  );
+};
+
 export default function App() {
   const [availableTopics, setAvailableTopics] = useState([]);
   const [platformPrompts, setPlatformPrompts] = useState({});
@@ -41,8 +214,9 @@ export default function App() {
   const [editableDescription, setEditableDescription] = useState("");
   const [selectedTopicName, setSelectedTopicName] = useState("");
 
-  // API base URL for production
-  const API_BASE_URL = 'http://191.101.233.56/ai-content-agent';
+  // API base URL - use environment variable, relative path for production, or localhost for development
+  const API_BASE_URL = process.env.REACT_APP_API_URL 
+    || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5050');
 
   // Fetch topics, platforms, and platform prompts when component mounts
   useEffect(() => {
@@ -180,7 +354,9 @@ export default function App() {
 
       // Small delay to show completion
       setTimeout(() => {
-        setGeneratedContent(data.content || data);
+        
+        // Store the content properly - data.content contains the platform objects
+        setGeneratedContent(data.content || {});
         
         // Set quality metrics if available
         if (data.metrics) {
@@ -263,8 +439,48 @@ export default function App() {
     const content = generatedContent[platform];
     if (!content) return;
 
+    // Handle both regular content and engagement packages
+    const mainContent = 'main_content' in content ? content.main_content : content;
+    const engagement = content?.engagement;
+    
+    let saveContent = mainContent;
+    
+    // Add engagement package to save content if available
+    if (engagement) {
+      saveContent += '\n\n' + '='.repeat(50) + '\n';
+      saveContent += 'ENGAGEMENT PACKAGE\n';
+      saveContent += '='.repeat(50) + '\n\n';
+      
+      if (engagement.comments) {
+        // New threaded format
+        saveContent += `Total Comments: ${engagement.meta?.total_comments || engagement.comments.length}\n`;
+        saveContent += `Platform: ${engagement.meta?.platform || 'N/A'}\n`;
+        saveContent += `Replies: ${engagement.meta?.percent_replies || 0}%\n`;
+        saveContent += `Barrana Responses: ${engagement.meta?.barrana_replies_count || 0}\n\n`;
+        
+        engagement.comments.forEach((comment, index) => {
+          const replyIndicator = comment.reply_to ? `[REPLY to ${comment.reply_to}]` : '[NEW]';
+          saveContent += `${replyIndicator} ${comment.speaker}:\n`;
+          saveContent += `"${comment.text}"\n`;
+          if (comment.tags && comment.tags.length > 0) {
+            saveContent += `Tags: ${comment.tags.join(', ')}\n`;
+          }
+          saveContent += '\n';
+        });
+      } else if (engagement.engagement_pairs) {
+        // Old format
+        engagement.engagement_pairs.forEach((pair, index) => {
+          saveContent += `Comment ${index + 1}:\n`;
+          saveContent += `"${pair.comment}"\n\n`;
+          saveContent += `Barrana Response:\n`;
+          saveContent += `${pair.barrana_response}\n\n`;
+          saveContent += '-'.repeat(30) + '\n\n';
+        });
+      }
+    }
+
     // Create a blob with the content
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([saveContent], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     
     // Create a temporary link element and trigger download
@@ -407,9 +623,9 @@ export default function App() {
                 Loading topics...
               </MenuItem>
             ) : (
-              availableTopics.map((t) => (
+              availableTopics.map((t, index) => (
                 <MenuItem 
-                  key={t.topic} 
+                  key={`topic-${index}-${t.topic}`} 
                   value={t.topic}
                   sx={{ 
                     color: '#333',
@@ -872,31 +1088,71 @@ export default function App() {
                       </Tabs>
                     </Box>
                     
-                    {Object.entries(generatedContent).map(([platform, content], index) => (
-                      <Box
-                        key={platform}
-                        sx={{
-                          display: activeTab === index ? 'block' : 'none',
-                          padding: 3
-                        }}
-                      >
-                        <Typography 
-                          style={{ 
-                            whiteSpace: "pre-wrap",
-                            lineHeight: 1.6,
-                            color: 'white'
-                          }}
+                    {Object.entries(generatedContent).map(([platform, content], index) => {
+                      // Handle both regular content and engagement packages
+                      const mainContent = content?.main_content || content;
+                      const engagement = content?.engagement;
+                      
+                      
+                      return (
+                        <Box
+                          key={platform}
                           sx={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            padding: 3,
-                            borderRadius: 2,
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            backdropFilter: 'blur(10px)',
-                            marginBottom: 3
+                            display: activeTab === index ? 'block' : 'none',
+                            padding: 3
                           }}
                         >
-                          {content}
-                        </Typography>
+                          <Typography 
+                            style={{ 
+                              whiteSpace: "pre-wrap",
+                              lineHeight: 1.6,
+                              color: 'white'
+                            }}
+                            sx={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                              padding: 3,
+                              borderRadius: 2,
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              backdropFilter: 'blur(10px)',
+                              marginBottom: 3
+                            }}
+                          >
+                            {mainContent}
+                          </Typography>
+                          
+                          {/* Engagement Package Display */}
+                          {engagement && (
+                            engagement.comments ? (
+                              // New threaded format from comments-engine.json
+                              <ThreadedEngagementDisplay engagement={engagement} />
+                            ) : engagement.engagement_pairs ? (
+                              // Old format for backwards compatibility
+                              <Box sx={{ marginTop: 3 }}>
+                                <Typography 
+                                  variant="h5" 
+                                  component="div"
+                                  sx={{ 
+                                    color: 'white', 
+                                    marginBottom: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                  }}
+                                >
+                                  💬 Engagement Package ({engagement.comments_count} comments)
+                                </Typography>
+                                
+                                {engagement.engagement_pairs.map((pair, pairIndex) => (
+                                  <EngagementPair 
+                                    key={`${platform}-engagement-${pairIndex}`}
+                                    comment={pair.comment}
+                                    response={pair.barrana_response}
+                                    index={pairIndex + 1}
+                                  />
+                                ))}
+                              </Box>
+                            ) : null
+                          )}
                         
                         <Box display="flex" gap={2} justifyContent="center">
                           <Button
@@ -936,68 +1192,109 @@ export default function App() {
                           </Button>
                         </Box>
                       </Box>
-                    ))}
+                      );
+                    })}
                   </Box>
                 ) : (
                   /* Single Platform - No Tabs */
-                  Object.entries(generatedContent).map(([platform, content], index) => (
-                    <Box
-                      key={platform}
-                      sx={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(20px)',
-                        borderRadius: 3,
-                        padding: 3,
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                        transition: 'all 0.3s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.2)',
-                          background: 'rgba(255, 255, 255, 0.15)'
-                        },
-                        animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" marginBottom={2}>
-                        <Box
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                            background: 'linear-gradient(45deg, #FF6B6B, #4ECDC4)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginRight: 2
-                          }}
-                        >
-                          <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>
-                            {platform.charAt(0).toUpperCase()}
-                          </Typography>
-                        </Box>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
-                          {platform.charAt(0).toUpperCase() + platform.slice(1).replace('_', ' ')}
-                        </Typography>
-                      </Box>
-                      
-                      <Typography 
-                        style={{ 
-                          whiteSpace: "pre-wrap",
-                          lineHeight: 1.6,
-                          color: 'white'
-                        }}
+                  Object.entries(generatedContent).map(([platform, content], index) => {
+                    // Handle both regular content and engagement packages
+                    const mainContent = content?.main_content || content;
+                    const engagement = content?.engagement;
+                    
+                    
+                    return (
+                      <Box
+                        key={platform}
                         sx={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(20px)',
+                          borderRadius: 3,
                           padding: 3,
-                          borderRadius: 2,
                           border: '1px solid rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(10px)',
-                          marginBottom: 3
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                          transition: 'all 0.3s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.2)',
+                            background: 'rgba(255, 255, 255, 0.15)'
+                          },
+                          animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
                         }}
                       >
-                        {content}
-                      </Typography>
+                        <Box display="flex" alignItems="center" marginBottom={2}>
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              background: 'linear-gradient(45deg, #FF6B6B, #4ECDC4)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: 2
+                            }}
+                          >
+                            <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>
+                              {platform.charAt(0).toUpperCase()}
+                            </Typography>
+                          </Box>
+                          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
+                            {platform.charAt(0).toUpperCase() + platform.slice(1).replace('_', ' ')}
+                          </Typography>
+                        </Box>
+                        
+                        <Typography 
+                          style={{ 
+                            whiteSpace: "pre-wrap",
+                            lineHeight: 1.6,
+                            color: 'white'
+                          }}
+                          sx={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            padding: 3,
+                            borderRadius: 2,
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)',
+                            marginBottom: 3
+                          }}
+                        >
+                          {mainContent}
+                        </Typography>
+                        
+                        {/* Engagement Package Display */}
+                        {engagement && (
+                          engagement.comments ? (
+                            // New threaded format from comments-engine.json
+                            <ThreadedEngagementDisplay engagement={engagement} />
+                          ) : engagement.engagement_pairs ? (
+                            // Old format for backwards compatibility
+                            <Box sx={{ marginTop: 3 }}>
+                              <Typography 
+                                variant="h5" 
+                                component="div"
+                                sx={{ 
+                                  color: 'white', 
+                                  marginBottom: 2,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1
+                                }}
+                              >
+                                💬 Engagement Package ({engagement.comments_count} comments)
+                              </Typography>
+                              
+                              {engagement.engagement_pairs.map((pair, pairIndex) => (
+                                <EngagementPair 
+                                  key={`${platform}-engagement-${pairIndex}`}
+                                  comment={pair.comment}
+                                  response={pair.barrana_response}
+                                  index={pairIndex + 1}
+                                />
+                              ))}
+                            </Box>
+                          ) : null
+                        )}
                       
                       <Box display="flex" gap={2} justifyContent="center">
                         <Button
@@ -1037,7 +1334,8 @@ export default function App() {
                         </Button>
                       </Box>
                     </Box>
-                  ))
+                    );
+                  })
                 )}
               </Box>
             )}
@@ -1132,7 +1430,7 @@ export default function App() {
             padding: 2
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
             📝 Edit Topic Description
           </Typography>
           <IconButton

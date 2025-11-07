@@ -1,0 +1,26 @@
+services:
+  # Flask Backend + React Frontend (Combined Service)
+  - type: web
+    name: ai-content-agent
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 5050
+      - key: FLASK_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: USE_JSON_LIBRARY
+        value: true
+      - key: FALLBACK_TO_SHEETS
+        value: true
+      # Optional: Add DigitalOcean URL if migrating
+      # - key: DO_APP_URL
+      #   value: your-app-url.onrender.com
+    healthCheckPath: /api/health
+    autoDeploy: true
+

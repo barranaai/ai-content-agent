@@ -3,6 +3,7 @@ import logging
 import re
 from typing import Dict, List, Optional, Any
 import os
+from datetime import datetime
 
 class BarranaPromptLibrary:
     """
@@ -10,10 +11,13 @@ class BarranaPromptLibrary:
     for building dynamic prompts and accessing platform configurations.
     """
     
-    def __init__(self, json_path: str = "Barrana-Merged-Prompt-Library-v3.1.json"):
+    def __init__(self, json_path: str = "Barrana-Merged-Prompt-Library-v3.1.json", comments_engine_path: str = "comments-engine.json"):
         self.json_path = json_path
+        self.comments_engine_path = comments_engine_path
         self.library = None
+        self.comments_engine = None
         self.load_library()
+        self.load_comments_engine()
     
     def load_library(self) -> None:
         """Load JSON library with comprehensive error handling"""
@@ -35,6 +39,26 @@ class BarranaPromptLibrary:
         except Exception as e:
             logging.error(f"Failed to load prompt library: {e}")
             raise
+    
+    def load_comments_engine(self) -> None:
+        """Load comments engine JSON with comprehensive error handling"""
+        try:
+            if not os.path.exists(self.comments_engine_path):
+                logging.warning(f"Comments engine file not found: {self.comments_engine_path}")
+                self.comments_engine = None
+                return
+            
+            with open(self.comments_engine_path, 'r', encoding='utf-8') as f:
+                self.comments_engine = json.load(f)
+            
+            logging.info(f"Comments engine loaded successfully from {self.comments_engine_path}")
+            
+        except json.JSONDecodeError as e:
+            logging.error(f"Invalid JSON in comments engine: {e}")
+            self.comments_engine = None
+        except Exception as e:
+            logging.error(f"Failed to load comments engine: {e}")
+            self.comments_engine = None
     
     def _validate_library_structure(self) -> None:
         """Validate that the library has the required structure"""
@@ -851,3 +875,703 @@ IMPORTANT:
             optimized_content = self.optimize_linkedin_quick_length(optimized_content)
         
         return optimized_content
+    
+    def get_engagement_config(self) -> Dict[str, Any]:
+        """
+        Get engagement system configuration from the library
+        
+        Returns:
+            Engagement system configuration
+        """
+        if not self.library:
+            raise RuntimeError("Prompt library not loaded")
+        
+        return self.library.get('engagement_system', {})
+    
+    def is_engagement_enabled_for_platform(self, platform: str) -> bool:
+        """
+        Check if engagement system is enabled for a specific platform
+        
+        Args:
+            platform: Target platform name
+        
+        Returns:
+            True if engagement is enabled for this platform
+        """
+        engagement_config = self.get_engagement_config()
+        enabled_platforms = engagement_config.get('enabled_platforms', [])
+        return platform in enabled_platforms
+    
+    def extract_industry_context(self, description: str) -> str:
+        """
+        Extract industry context from content description
+        
+        Args:
+            description: The content description
+        
+        Returns:
+            Detected industry name
+        """
+        try:
+            from openai import OpenAI
+            import os
+            
+            client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            
+            industry_prompt = f"""
+            Analyze this business description and identify the primary industry:
+            "{description}"
+            
+            Return only the industry name from this list: restaurant, retail, e-commerce, consulting, healthcare, real_estate, fitness, beauty, automotive, technology, finance, education, manufacturing, construction, hospitality, professional_services.
+            
+            If the industry is not clearly identifiable, return "general_business".
+            """
+            
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": industry_prompt}],
+                max_tokens=50,
+                temperature=0.3
+            )
+            
+            industry = response.choices[0].message.content.strip().lower()
+            
+            # Validate against known industries
+            engagement_config = self.get_engagement_config()
+            known_industries = engagement_config.get('industry_detection', {}).get('common_industries', [])
+            
+            if industry not in known_industries and industry != "general_business":
+                return "general_business"
+            
+            return industry
+            
+        except Exception as e:
+            logging.warning(f"Error extracting industry context: {e}")
+            return "general_business"
+    
+    def generate_authentic_comments(self, main_content: str, platform: str, description: str) -> List[str]:
+        """
+        Generate authentic comments for social media engagement
+        
+        Args:
+            main_content: The main post content
+            platform: Target platform
+            description: Original content description
+        
+        Returns:
+            List of generated comments
+        """
+        try:
+            from openai import OpenAI
+            import os
+            import random
+            
+            client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            engagement_config = self.get_engagement_config()
+            comment_config = engagement_config.get('comment_generation', {})
+            comment_types = comment_config.get('comment_types', {})
+            
+            # Extract industry context
+            industry = self.extract_industry_context(description)
+            
+            # Get comment count range
+            count_range = comment_config.get('count_range', [5, 7])
+            comment_count = random.randint(count_range[0], count_range[1])
+            
+            # Select random comment types
+            available_types = list(comment_types.keys())
+            selected_types = random.sample(available_types, min(comment_count, len(available_types)))
+            
+            # Get platform-specific guidelines
+            platform_guidelines = engagement_config.get('platform_specific_guidelines', {}).get(platform, "")
+            uniqueness_guidelines = engagement_config.get('uniqueness_guidelines', [])
+            
+            comments = []
+            generated_comments = []  # Track generated comments to avoid repetition
+            
+            for i, comment_type in enumerate(selected_types):
+                try:
+                    comment_config = comment_types[comment_type]
+                    comment_template = comment_config['template']
+                    avoid_phrases = comment_config.get('avoid_phrases', [])
+                    
+                    # Format template with industry and platform
+                    comment_prompt = comment_template.format(industry=industry, platform=platform)
+                    
+                    # Build uniqueness context
+                    uniqueness_context = ""
+                    if generated_comments:
+                        uniqueness_context = f"\n\nIMPORTANT: Avoid repeating these existing comments:\n" + "\n".join([f"- {comment}" for comment in generated_comments])
+                    
+                    # Add context about the main content
+                    full_prompt = f"""
+                    {comment_prompt}
+                    
+                    Platform Guidelines: {platform_guidelines}
+                    
+                    Uniqueness Guidelines:
+                    {chr(10).join(f"- {guideline}" for guideline in uniqueness_guidelines)}
+                    
+                    Phrases to AVOID: {', '.join(avoid_phrases)}
+                    
+                    The main post content is:
+                    "{main_content}"
+                    {uniqueness_context}
+                    
+                    Generate a unique, natural comment that sounds like a real person. Make it authentic and platform-appropriate. Vary the length and style from other comments.
+                    """
+                    
+                    response = client.chat.completions.create(
+                        model="gpt-4",
+                        messages=[{"role": "user", "content": full_prompt}],
+                        max_tokens=120,
+                        temperature=0.9
+                    )
+                    
+                    comment = response.choices[0].message.content.strip()
+                    comments.append(comment)
+                    generated_comments.append(comment)  # Track for uniqueness
+                    
+                except Exception as e:
+                    logging.warning(f"Error generating {comment_type} comment: {e}")
+                    continue
+            
+            return comments
+            
+        except Exception as e:
+            logging.error(f"Error generating authentic comments: {e}")
+            return []
+    
+    def generate_barrana_response(self, comment: str, main_content: str, platform: str) -> str:
+        """
+        Generate professional Barrana response to a comment
+        
+        Args:
+            comment: The comment to respond to
+            main_content: The main post content
+            platform: Target platform
+        
+        Returns:
+            Professional Barrana response
+        """
+        try:
+            from openai import OpenAI
+            import os
+            
+            client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            engagement_config = self.get_engagement_config()
+            response_config = engagement_config.get('response_generation', {})
+            
+            barrana_voice = response_config.get('barrana_voice', '')
+            response_guidelines = response_config.get('response_guidelines', [])
+            
+            # Determine response strategy based on comment type
+            response_strategy = self._determine_response_strategy(comment, response_config)
+            
+            response_prompt = f"""
+            {barrana_voice}
+            
+            Response Strategy: {response_strategy}
+            
+            Guidelines:
+            {chr(10).join(f"- {guideline}" for guideline in response_guidelines)}
+            
+            The original post was:
+            "{main_content}"
+            
+            Someone commented:
+            "{comment}"
+            
+            Generate a professional, helpful response from Barrana. Keep it 2-3 sentences and end with a question or call-to-action when appropriate.
+            """
+            
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": response_prompt}],
+                max_tokens=150,
+                temperature=0.7
+            )
+            
+            return response.choices[0].message.content.strip()
+            
+        except Exception as e:
+            logging.error(f"Error generating Barrana response: {e}")
+            return "Thank you for your comment! I'd love to help you further. Feel free to reach out via www.barrana.ai for a consultation."
+    
+    def _determine_response_strategy(self, comment: str, response_config: Dict[str, Any]) -> str:
+        """
+        Determine the appropriate response strategy based on comment content
+        
+        Args:
+            comment: The comment text
+            response_config: Response generation configuration
+        
+        Returns:
+            Response strategy description
+        """
+        comment_lower = comment.lower()
+        strategies = response_config.get('response_strategies', {})
+        
+        # Simple keyword-based strategy detection
+        if any(word in comment_lower for word in ['question', 'how', 'what', 'when', 'where', 'why']):
+            return strategies.get('questioning', 'Provide a helpful answer with specific advice.')
+        elif any(word in comment_lower for word in ['tried', 'experience', 'used', 'implemented']):
+            return strategies.get('sharing_experience', 'Validate their experience and offer insights.')
+        elif any(word in comment_lower for word in ['concern', 'worry', 'cost', 'expensive', 'difficult']):
+            return strategies.get('skeptical', 'Address their concerns with facts and examples.')
+        elif any(word in comment_lower for word in ['excited', 'love', 'amazing', 'great', 'perfect']):
+            return strategies.get('enthusiastic', 'Encourage their enthusiasm and provide next steps.')
+        elif any(word in comment_lower for word in ['success', 'worked', 'improved', 'results', 'better']):
+            return strategies.get('success_story', 'Celebrate their success and ask for more details.')
+        else:
+            return strategies.get('supportive', 'Acknowledge their situation and offer additional value.')
+    
+    def generate_engagement_package(self, main_content: str, platform: str, description: str) -> Dict[str, Any]:
+        """
+        Generate complete engagement package for social media platforms using comments-engine.json
+        
+        Args:
+            main_content: The main post content
+            platform: Target platform
+            description: Original content description
+        
+        Returns:
+            Complete engagement package with threaded comments and personas
+        """
+        if not self.is_engagement_enabled_for_platform(platform):
+            return {}
+        
+        # Use new comments engine if available
+        if self.comments_engine:
+            return self.generate_threaded_engagement_cluster(main_content, platform, description)
+        
+        # Fallback to old system if comments engine not loaded
+        try:
+            # Generate authentic comments
+            comments = self.generate_authentic_comments(main_content, platform, description)
+            
+            if not comments:
+                return {}
+            
+            # Generate Barrana responses for each comment
+            engagement_pairs = []
+            for comment in comments:
+                response = self.generate_barrana_response(comment, main_content, platform)
+                engagement_pairs.append({
+                    'comment': comment,
+                    'barrana_response': response
+                })
+            
+            return {
+                'comments_count': len(comments),
+                'engagement_pairs': engagement_pairs,
+                'platform': platform,
+                'generated_at': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logging.error(f"Error generating engagement package: {e}")
+            return {}
+    
+    def generate_threaded_engagement_cluster(self, main_content: str, platform: str, description: str) -> Dict[str, Any]:
+        """
+        Generate threaded comment cluster using comments-engine.json specifications
+        
+        This generates 15-20 comments with 5 personas (Person A-E) + Barrana,
+        with proper threading, reply logic, and timing delays.
+        
+        Args:
+            main_content: The main post content
+            platform: Target platform (linkedin, instagram, facebook, tiktok)
+            description: Original content description
+        
+        Returns:
+            Complete engagement package with threaded comments, personas, and timing
+        """
+        if not self.comments_engine:
+            logging.warning("Comments engine not loaded, cannot generate threaded cluster")
+            return {}
+        
+        try:
+            import random
+            from openai import OpenAI
+            import os
+            
+            client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            
+            # Get configuration from comments engine
+            personas = self.comments_engine.get('personas', {})
+            platform_config = self.comments_engine.get('platform_specific_addons', {}).get(platform, {})
+            timing_config = self.comments_engine.get('timing_and_cadence', {}).get(platform, {})
+            reply_logic = self.comments_engine.get('reply_logic_and_structure', {})
+            barrana_context = self.comments_engine.get('barrana_business_context', {})
+            
+            # Build master prompt
+            master_prompt = self._build_comments_engine_prompt(
+                main_content, 
+                platform, 
+                description,
+                personas,
+                platform_config,
+                barrana_context
+            )
+            
+            # Generate the comment cluster using GPT-4
+            logging.info(f"Generating threaded comment cluster for {platform}...")
+            
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[{
+                    "role": "system",
+                    "content": "You are an expert social media engagement strategist. Generate authentic, natural comment threads following the exact specifications provided."
+                }, {
+                    "role": "user",
+                    "content": master_prompt
+                }],
+                max_tokens=3000,
+                temperature=0.85
+            )
+            
+            # Parse the JSON response
+            response_text = response.choices[0].message.content.strip()
+            
+            # Extract JSON from markdown code blocks if present
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+            
+            try:
+                cluster_data = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                logging.error(f"Failed to parse GPT-4 response as JSON: {e}")
+                logging.error(f"Response text: {response_text[:500]}...")
+                return {}
+            
+            # Validate and enrich the cluster data
+            enriched_cluster = self._enrich_comment_cluster(cluster_data, platform, timing_config)
+            
+            logging.info(f"✅ Generated {enriched_cluster.get('meta', {}).get('total_comments', 0)} comments for {platform}")
+            
+            return enriched_cluster
+            
+        except Exception as e:
+            logging.error(f"Error generating threaded engagement cluster: {e}")
+            import traceback
+            traceback.print_exc()
+            return {}
+    
+    def _build_comments_engine_prompt(self, main_content: str, platform: str, description: str, 
+                                     personas: Dict, platform_config: Dict, barrana_context: Dict) -> str:
+        """Build the comprehensive prompt for GPT-4 based on comments-engine.json"""
+        
+        # Extract persona information
+        person_a = personas.get('person_a', {})
+        person_b = personas.get('person_b', {})
+        person_c = personas.get('person_c', {})
+        person_d = personas.get('person_d', {})
+        person_e = personas.get('person_e', {})
+        barrana = personas.get('barrana', {})
+        
+        # Add geographic locations for personas (expanded list)
+        locations = ["New York", "London", "Toronto", "San Francisco", "Austin", "Chicago", 
+                    "Boston", "Seattle", "Miami", "Dallas", "Denver", "Portland", "Atlanta", 
+                    "Phoenix", "San Diego", "Vancouver", "Montreal", "Sydney", "Singapore"]
+        import random
+        person_a_location = random.choice(locations)
+        person_b_location = random.choice([loc for loc in locations if loc != person_a_location])
+        person_c_location = random.choice([loc for loc in locations if loc not in [person_a_location, person_b_location]])
+        
+        # Get sentence banks for variation
+        sentence_banks = self.comments_engine.get('sentence_banks', {})
+        uniqueness_rules = self.comments_engine.get('uniqueness_enforcement', {})
+        
+        # Randomly select variation examples from banks
+        person_a_question_starters = sentence_banks.get('person_a_question_starters', [])
+        person_a_questions = sentence_banks.get('person_a_questions', [])
+        person_b_skeptical_openers = sentence_banks.get('person_b_skeptical_openers', [])
+        person_b_concerns = sentence_banks.get('person_b_concerns', [])
+        person_c_result_metrics = sentence_banks.get('person_c_result_metrics', [])
+        person_c_testimonial_starters = sentence_banks.get('person_c_testimonial_starters', [])
+        person_d_tag_phrases = sentence_banks.get('person_d_tag_phrases', [])
+        person_e_reactions = sentence_banks.get('person_e_reactions', [])
+        person_e_emoji_combos = sentence_banks.get('person_e_emoji_combos', [])
+        
+        # Barrana response variations
+        barrana_security_responses = sentence_banks.get('barrana_response_security', [])
+        barrana_cost_responses = sentence_banks.get('barrana_response_cost', [])
+        barrana_how_it_works = sentence_banks.get('barrana_response_how_it_works', [])
+        barrana_result_responses = sentence_banks.get('barrana_response_results', [])
+        
+        # Randomly select which persona should dominate this thread
+        dominant_personas = ['Person A', 'Person B', 'Person C', 'Person D', 'Person E']
+        dominant_persona = random.choice(dominant_personas)
+        
+        # Banned phrases to avoid
+        banned_phrases = uniqueness_rules.get('banned_repetitive_phrases', [])
+        
+        prompt = f"""
+Generate a natural, authentic comment thread for a {platform.upper()} post.
+
+⚠️ CRITICAL: Comments MUST reference SPECIFIC content from the post below. Do NOT generate generic comments!
+
+====================
+POST CONTENT (READ CAREFULLY):
+====================
+{main_content}
+
+====================
+CONTENT-SPECIFIC REQUIREMENTS:
+====================
+✅ Quote specific phrases or statistics from the post
+✅ Ask about specific features, benefits, or examples mentioned
+✅ Comment on specific results, numbers, or case studies
+✅ Reference exact industry examples or pain points discussed
+✅ React to specific insights or contrarian points made
+❌ Do NOT use generic phrases like "This is interesting" without specifics
+❌ Do NOT ask generic questions - tie them to the post content
+❌ Do NOT give generic praise - cite what specifically resonated
+
+EXAMPLE:
+BAD: "Great post! This is very helpful."
+GOOD: "Love the point about '20% cost reduction' - is that consistent across all industries?"
+
+====================
+BARRANA CONTEXT:
+====================
+Identity: {barrana_context.get('identity', '')}
+Services: {', '.join(barrana_context.get('services', []))}
+Tone: {barrana_context.get('tone', '')}
+Industries: {', '.join(barrana_context.get('industries', []))}
+
+====================
+PERSONAS (6 VOICES WITH LOCATIONS):
+====================
+
+🎯 DOMINANT PERSONA FOR THIS THREAD: {dominant_persona}
+(This persona should have MORE comments than others - give them 3-4 comments/replies)
+
+1. PERSON A ({person_a.get('name', 'The Curious One')}) - Based in {person_a_location}:
+   Voice: {person_a.get('voice', '')}
+   
+   VARIATION BANK - Use these starters (pick different ones each time):
+   {', '.join(random.sample(person_a_question_starters, min(5, len(person_a_question_starters))))}
+   
+   VARIATION BANK - Questions to choose from (mix and match):
+   {', '.join(random.sample(person_a_questions, min(6, len(person_a_questions))))}
+   
+   Geographic context: Reference {person_a_location} market/regulations/pricing
+
+2. PERSON B ({person_b.get('name', 'The Skeptic')}) - Based in {person_b_location}:
+   Voice: {person_b.get('voice', '')}
+   
+   VARIATION BANK - Skeptical openers (rotate these):
+   {', '.join(random.sample(person_b_skeptical_openers, min(5, len(person_b_skeptical_openers))))}
+   
+   VARIATION BANK - Concerns to raise (pick different ones):
+   {', '.join(random.sample(person_b_concerns, min(6, len(person_b_concerns))))}
+   
+   Geographic context: Reference {person_b_location} regulations/compliance
+
+3. PERSON C ({person_c.get('name', 'The Insider')}) - Based in {person_c_location}:
+   Voice: {person_c.get('voice', '')}
+   
+   VARIATION BANK - Testimonial starters (use different ones):
+   {', '.join(random.sample(person_c_testimonial_starters, min(5, len(person_c_testimonial_starters))))}
+   
+   VARIATION BANK - Result metrics (pick ONE per comment, vary the format):
+   {', '.join(random.sample(person_c_result_metrics, min(6, len(person_c_result_metrics))))}
+   
+   REQUIREMENT: Vary metrics - use percentages, time, money, or qualitative results
+   Geographic context: {person_c_location}-based business
+
+4. PERSON D ({person_d.get('name', 'The Amplifier')}):
+   Voice: {person_d.get('voice', '')}
+   
+   VARIATION BANK - Tag phrases (rotate):
+   {', '.join(random.sample(person_d_tag_phrases, min(6, len(person_d_tag_phrases))))}
+   
+   REQUIREMENT: Tag 1-2 handles relevant to industry (e.g., @RestaurantOwner, @ClinicManager)
+   REQUIREMENT: Vary the tag phrases - never use the same structure twice
+
+5. PERSON E ({person_e.get('name', 'The Cheerleader')}):
+   Voice: {person_e.get('voice', '')}
+   
+   VARIATION BANK - Reactions (mix these):
+   {', '.join(random.sample(person_e_reactions, min(6, len(person_e_reactions))))}
+   
+   VARIATION BANK - Emoji combos (use different ones):
+   {', '.join(random.sample(person_e_emoji_combos, min(5, len(person_e_emoji_combos))))}
+   
+   REQUIREMENT: Short, punchy, emoji-rich BUT reference specific content
+
+6. BARRANA ({barrana.get('name', 'Barrana')}):
+   Voice: {barrana.get('voice', '')}
+   
+   VARIATION BANK - Security responses (pick different ones for each security question):
+   • {random.sample(barrana_security_responses, min(3, len(barrana_security_responses)))[0] if barrana_security_responses else 'Security response'}
+   • {random.sample(barrana_security_responses, min(3, len(barrana_security_responses)))[1] if len(barrana_security_responses) > 1 else 'Security response'}
+   
+   VARIATION BANK - Cost responses (pick different ones for each cost question):
+   • {random.sample(barrana_cost_responses, min(3, len(barrana_cost_responses)))[0] if barrana_cost_responses else 'Cost response'}
+   • {random.sample(barrana_cost_responses, min(3, len(barrana_cost_responses)))[1] if len(barrana_cost_responses) > 1 else 'Cost response'}
+   
+   VARIATION BANK - How it works (pick different ones):
+   • {random.sample(barrana_how_it_works, min(3, len(barrana_how_it_works)))[0] if barrana_how_it_works else 'How it works'}
+   • {random.sample(barrana_how_it_works, min(3, len(barrana_how_it_works)))[1] if len(barrana_how_it_works) > 1 else 'How it works'}
+   
+   VARIATION BANK - Result acknowledgments (when replying to Person C):
+   • {random.sample(barrana_result_responses, min(3, len(barrana_result_responses)))[0] if barrana_result_responses else 'Result response'}
+   
+   REQUIREMENT: NEVER start with "Great question!" or "Glad to hear!" - use the variation banks above
+
+====================
+PLATFORM-SPECIFIC GUIDELINES FOR {platform.upper()}:
+====================
+Tone: {platform_config.get('tone', '')}
+Emoji Usage: {platform_config.get('emoji_usage', '')}
+Delays: {platform_config.get('delays', '')}
+
+====================
+🚨 UNIQUENESS ENFORCEMENT (CRITICAL):
+====================
+
+BANNED PHRASES - NEVER use these exact phrases:
+{chr(10).join(f'❌ "{phrase}"' for phrase in banned_phrases)}
+
+RANDOMIZATION REQUIREMENTS:
+✅ Use DIFFERENT question structures each time (vary "how/what/when/where/why")
+✅ Rotate Barrana's opening words - USE THE VARIATION BANKS ABOVE
+✅ Mix metric formats: percentages (22%), time (6 weeks), money ($8K), qualitative (significant)
+✅ Use DIFFERENT cities across posts (we have 19 locations to choose from)
+✅ Vary comment lengths WITHIN each persona (not all medium)
+✅ Change concern order: sometimes security first, sometimes cost, sometimes usability
+✅ Person C should use DIFFERENT metrics each time - never repeat "30%" or "40%"
+
+VARIATION REQUIREMENT:
+🎯 If you used "How would this work for X?" in a previous comment, try:
+   • "Walk me through how X would use this"
+   • "Can you break down the setup for X?"
+   • "What would implementation look like for X?"
+   • "Does this scale down to X size?"
+
+====================
+MANDATORY REQUIREMENTS:
+====================
+1. Generate 15-20 comments total
+2. At least 50% of comments must be REPLIES (not top-level)
+3. Barrana must reply to each persona at least once
+4. Barrana must reply to Person B (The Skeptic) TWICE
+5. Person D must tag 1-2 external handles (relevant to content)
+6. Person C must cite at least one specific benefit/result from their experience
+7. Person E must use emojis in ≥50% of their comments
+8. NO duplicate text or repetitive phrasing - USE THE VARIATION BANKS
+9. Vary comment lengths: short (1 line), medium (2-3 lines), long (4-5 lines)
+10. Use natural, platform-appropriate language
+11. Limit deep nesting (max 3 replies per parent comment)
+12. 🔥 CONTENT-SPECIFIC: Every comment must tie to something SPECIFIC in the post above
+13. 🎯 DOMINANT PERSONA ({dominant_persona}) should have 3-4 comments total
+
+====================
+OUTPUT FORMAT (JSON):
+====================
+{{
+  "platform": "{platform}",
+  "post_reference": "Generated for: {description[:100]}...",
+  "comments": [
+    {{
+      "id": "c1",
+      "speaker": "Person A|Person B|Person C|Person D|Person E|Barrana",
+      "type": "new|reply",
+      "reply_to": null or "c<number>",
+      "text": "The actual comment text...",
+      "tone": "curious|skeptical|enthusiastic|amplifying|cheerleading|authoritative",
+      "suggested_delay_seconds": <integer>,
+      "tags": ["@handle1", "@handle2"] or []
+    }}
+  ],
+  "meta": {{
+    "total_comments": <count>,
+    "percent_replies": <percentage>,
+    "barrana_replies_count": <count>,
+    "amplifier_tags_count": <count>
+  }}
+}}
+
+====================
+COMMENT LENGTH VARIATION:
+====================
+Distribute comment lengths naturally:
+- 30% SHORT (1 sentence, 5-15 words): Quick reactions, emoji responses
+- 50% MEDIUM (2-3 sentences, 15-40 words): Standard comments, questions
+- 20% LONG (4-5 sentences, 40-80 words): Testimonials, detailed questions, insider stories
+
+====================
+QUESTION DEPTH EXAMPLES:
+====================
+SHALLOW: "How does this work?"
+MEDIUM: "How would this integrate with our existing CRM system?"
+DEEP: "For a 50-seat restaurant doing 300 orders on weekends with Square POS, what's the typical integration timeline and any gotchas with menu syncing?"
+
+Use a mix of shallow, medium, and deep questions!
+
+====================
+IMPORTANT REMINDERS:
+====================
+- Make it look natural and organic
+- REFERENCE SPECIFIC CONTENT from the post (most important!)
+- Avoid generic phrases and corporate speak
+- Each persona should have a distinct voice AND location context
+- Thread the conversation logically (replies should reference parent comments)
+- Use conservative claims only (no fake testimonials)
+- Soft CTAs only (e.g., "DM us", "link in bio")
+- Vary comment lengths (short, medium, long)
+- Include technical, business, and practical questions at different depths
+- Person C should give specific numbers/results from their experience
+
+Generate the complete JSON now:
+"""
+        
+        return prompt
+    
+    def _enrich_comment_cluster(self, cluster_data: Dict, platform: str, timing_config: Dict) -> Dict:
+        """Enrich cluster data with additional metadata and validation"""
+        
+        # Ensure meta exists
+        if 'meta' not in cluster_data:
+            cluster_data['meta'] = {}
+        
+        # Calculate meta statistics
+        comments = cluster_data.get('comments', [])
+        total_comments = len(comments)
+        reply_count = sum(1 for c in comments if c.get('type') == 'reply' or c.get('reply_to'))
+        barrana_replies = sum(1 for c in comments if c.get('speaker') == 'Barrana' and (c.get('type') == 'reply' or c.get('reply_to')))
+        amplifier_tags = sum(len(c.get('tags', [])) for c in comments if c.get('speaker') == 'Person D')
+        
+        cluster_data['meta'].update({
+            'total_comments': total_comments,
+            'percent_replies': round((reply_count / total_comments * 100) if total_comments > 0 else 0, 2),
+            'barrana_replies_count': barrana_replies,
+            'amplifier_tags_count': amplifier_tags,
+            'platform': platform,
+            'generated_at': datetime.now().isoformat()
+        })
+        
+        # Add timing configuration
+        cluster_data['timing_guidelines'] = timing_config
+        
+        # Validate requirements
+        warnings = []
+        if total_comments < 15:
+            warnings.append(f"Only {total_comments} comments generated (expected 15-20)")
+        if reply_count / total_comments < 0.5 if total_comments > 0 else False:
+            warnings.append(f"Only {cluster_data['meta']['percent_replies']}% replies (expected ≥50%)")
+        if barrana_replies < 5:
+            warnings.append(f"Only {barrana_replies} Barrana replies (expected at least 5)")
+        
+        if warnings:
+            cluster_data['meta']['warnings'] = warnings
+            for warning in warnings:
+                logging.warning(f"Comment cluster validation: {warning}")
+        
+        return cluster_data
