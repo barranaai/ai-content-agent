@@ -41,7 +41,13 @@ allowed_origins = [
     'http://191.101.233.56',
 ]
 
-# Add DigitalOcean App Platform URL if available
+# Add Render App Platform URL if available
+render_url = os.environ.get('RENDER_EXTERNAL_URL')
+if render_url:
+    allowed_origins.append(render_url)
+    logging.info(f"Added Render URL to CORS: {render_url}")
+
+# Add custom app URL if available (for DigitalOcean or custom domains)
 do_app_url = os.environ.get('DO_APP_URL')
 if do_app_url:
     allowed_origins.append(f'https://{do_app_url}')
