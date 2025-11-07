@@ -31,8 +31,10 @@ client = OpenAI()
 USE_JSON_LIBRARY = os.environ.get('USE_JSON_LIBRARY', 'true').lower() == 'true'
 FALLBACK_TO_SHEETS = os.environ.get('FALLBACK_TO_SHEETS', 'true').lower() == 'true'
 
-# Initialize Flask app
-app = Flask(__name__)
+# Initialize Flask app with static folder configuration
+app = Flask(__name__, 
+            static_folder='ai-content-agent-ui/build',
+            static_url_path='')
 
 # CORS configuration for development and production
 allowed_origins = [
@@ -412,22 +414,29 @@ def generate_content_with_legacy_system(description: str, platform: str, prompts
         logging.error(f"❌ Legacy system generation failed for {platform}: {e}")
         raise
 
-# Serve React Frontend
+# Serve React Frontend - must be LAST route (catch-all)
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
-    """Serve React frontend or API routes"""
-    # If path starts with 'api/', let it fall through to API routes
+    """Serve React frontend for all non-API routes"""
+    # API routes should be handled by their specific endpoints above
     if path.startswith('api/'):
         return jsonify({"error": "API endpoint not found"}), 404
     
-    # Serve static files from React build
+    # Build directory path
     build_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ai-content-agent-ui', 'build')
     
-    if path and os.path.exists(os.path.join(build_dir, path)):
-        return send_from_directory(build_dir, path)
-    else:
-        return send_file(os.path.join(build_dir, 'index.html'))
+    # If it's a file request (has extension) and exists, serve it
+    if path and ('.' in path.split('/')[-1]):
+        file_path = os.path.join(build_dir, path)
+        if os.path.exists(file_path):
+            return send_from_directory(build_dir, path)
+        else:
+            logging.warning(f"Static file not found: {path}")
+            return jsonify({"error": "File not found"}), 404
+    
+    # For all other routes (SPA routing), serve index.html
+    return send_from_directory(build_dir, 'index.html')
 
 # Health check endpoint
 @app.route('/api/health')
