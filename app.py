@@ -148,21 +148,42 @@ def fetch_prompts_legacy(service, sheet_id):
                 prompts[platform] = prompt_text
     return prompts
 
+# Default topics fallback (when Google Sheets is not available)
+DEFAULT_TOPICS = [
+    {"topic": "AI and Automation", "description": "How AI and automation transform business operations"},
+    {"topic": "Digital Transformation", "description": "Modernizing business processes with technology"},
+    {"topic": "Customer Experience", "description": "Improving customer satisfaction and engagement"},
+    {"topic": "Data Analytics", "description": "Using data to drive business decisions"},
+    {"topic": "Cloud Computing", "description": "Benefits and strategies for cloud adoption"},
+    {"topic": "Cybersecurity", "description": "Protecting business data and systems"},
+    {"topic": "Remote Work", "description": "Managing distributed teams effectively"},
+    {"topic": "Productivity Tools", "description": "Software and tools that boost team productivity"},
+    {"topic": "Marketing Automation", "description": "Automating marketing campaigns and workflows"},
+    {"topic": "Business Intelligence", "description": "Turning data into actionable insights"}
+]
+
 # New API endpoints using JSON library
 @app.route('/api/topics')
 def api_get_topics():
-    """Get topics - ALWAYS from Google Sheets (topics come from sheets, prompts from JSON)"""
+    """Get topics - Try Google Sheets, fallback to default topics"""
     try:
-        # Topics should ALWAYS come from Google Sheets
-        service = get_google_sheets_service()
-        topics_sheet_id = '12qFx-0Si0-g8Hp_yq7sIm7I5gJiACaOaLep04dSYC_U'
-        topics = fetch_topics_legacy(service, topics_sheet_id)
-        logging.info(f"✅ Topics loaded from Google Sheets: {len(topics)} topics")
-        return jsonify(topics)
+        # Try to load from Google Sheets if credentials are available
+        if os.path.exists('token.pickle') and os.path.exists('client_secret.json'):
+            service = get_google_sheets_service()
+            topics_sheet_id = '12qFx-0Si0-g8Hp_yq7sIm7I5gJiACaOaLep04dSYC_U'
+            topics = fetch_topics_legacy(service, topics_sheet_id)
+            logging.info(f"✅ Topics loaded from Google Sheets: {len(topics)} topics")
+            return jsonify(topics)
+        else:
+            # Google Sheets credentials not available, use default topics
+            logging.info(f"ℹ️ Google Sheets credentials not found, using default topics: {len(DEFAULT_TOPICS)} topics")
+            return jsonify(DEFAULT_TOPICS)
             
     except Exception as e:
-        logging.error(f"❌ Error loading topics from Google Sheets: {e}")
-        return jsonify({"error": f"Failed to load topics: {str(e)}"}), 500
+        # If Google Sheets fails, fallback to default topics
+        logging.warning(f"⚠️ Failed to load topics from Google Sheets: {e}")
+        logging.info(f"🔄 Falling back to default topics: {len(DEFAULT_TOPICS)} topics")
+        return jsonify(DEFAULT_TOPICS)
 
 @app.route('/api/platforms')
 def api_get_platforms():
