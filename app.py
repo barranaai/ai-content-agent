@@ -122,24 +122,37 @@ def get_google_sheets_service():
     token_path = get_secret_file_path('token.pickle')
     client_secret_path = get_secret_file_path('client_secret.json')
     
-    if token_path:
+    if not token_path:
+        raise Exception("token.pickle not found in any location")
+    
+    if not client_secret_path:
+        raise Exception("client_secret.json not found in any location")
+    
+    # Load existing credentials
+    try:
         with open(token_path, 'rb') as token:
             creds = pickle.load(token)
+        logging.info(f"✅ Loaded credentials from {token_path}")
+    except Exception as e:
+        logging.error(f"❌ Failed to load token.pickle: {e}")
+        raise
+    
+    # Check if credentials are valid
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        elif client_secret_path:
-            flow = InstalledAppFlow.from_client_secrets_file(client_secret_path, SCOPES)
-            creds = flow.run_local_server(port=8080)
-        else:
-            raise Exception("client_secret.json not found")
-        # Try to save token (may fail in read-only environments)
-        if token_path:
             try:
-                with open(token_path, 'wb') as token:
-                    pickle.dump(creds, token)
+                logging.info("🔄 Token expired, attempting to refresh...")
+                creds.refresh(Request())
+                logging.info("✅ Token refreshed successfully")
+                # Note: We can't save the refreshed token in /etc/secrets/ (read-only)
+                # You'll need to regenerate token.pickle locally and re-upload to Render when it expires
             except Exception as e:
-                logging.warning(f"Could not save token.pickle: {e}")
+                logging.error(f"❌ Failed to refresh token: {e}")
+                raise Exception(f"Token refresh failed. Please regenerate token.pickle locally and re-upload to Render. Error: {e}")
+        else:
+            # Token is invalid and can't be refreshed - need manual intervention
+            raise Exception("Token is invalid or expired without refresh token. Please regenerate token.pickle locally using google-sheets-connect.py and re-upload to Render.")
+    
     service = build('sheets', 'v4', credentials=creds)
     return service
 
