@@ -135,19 +135,21 @@ def get_google_sheets_service():
             
         # Log first few bytes for debugging
         logging.info(f"🔍 Token file first bytes: {token_data[:10]}")
+        logging.info(f"📏 Token file size: {len(token_data)} bytes")
             
         # Try to detect if file is base64 encoded (workaround for Render text upload)
-        # Valid pickle files start with \x80\x03, \x80\x04, \x80\x05, or 'gASV' (base64 of pickle)
-        # If file starts with something else (like \xef for UTF-8 BOM), try base64 decode
-        if not (token_data.startswith(b'\x80') or token_data.startswith(b'gASV')):
+        # Base64 encoded pickle files will start with 'gASV' (base64 of pickle protocol 5)
+        # Valid binary pickle files start with \x80\x03, \x80\x04, \x80\x05
+        if token_data.startswith(b'gASV') or (not token_data.startswith(b'\x80') and len(token_data) > 100):
             try:
                 import base64
-                # Remove any whitespace/newlines that might have been added
-                token_data_clean = token_data.strip()
+                # Remove ALL whitespace/newlines that might have been added by text editor
+                token_data_clean = b''.join(token_data.split())
+                logging.info(f"🧹 Cleaned base64 data size: {len(token_data_clean)} bytes")
                 token_data = base64.b64decode(token_data_clean)
-                logging.info("🔄 Decoded base64-encoded token.pickle")
+                logging.info(f"🔄 Decoded base64-encoded token.pickle to {len(token_data)} bytes")
             except Exception as decode_err:
-                logging.warning(f"⚠️ Not a valid base64 file: {decode_err}")
+                logging.error(f"❌ Failed to decode base64: {decode_err}")
                 # Continue with original data
         
         creds = pickle.loads(token_data)
