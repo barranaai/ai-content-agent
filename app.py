@@ -146,6 +146,13 @@ def get_google_sheets_service():
                 # Remove ALL whitespace/newlines that might have been added by text editor
                 token_data_clean = b''.join(token_data.split())
                 logging.info(f"🧹 Cleaned base64 data size: {len(token_data_clean)} bytes")
+                
+                # Fix base64 padding if needed (base64 strings must be multiple of 4)
+                missing_padding = len(token_data_clean) % 4
+                if missing_padding:
+                    token_data_clean += b'=' * (4 - missing_padding)
+                    logging.info(f"🔧 Added {4 - missing_padding} padding characters")
+                
                 token_data = base64.b64decode(token_data_clean)
                 logging.info(f"🔄 Decoded base64-encoded token.pickle to {len(token_data)} bytes")
             except Exception as decode_err:
