@@ -104,20 +104,42 @@ initialize_new_systems()
 # Legacy Google Sheets functions (for backward compatibility)
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
+def get_secret_file_path(filename):
+    """Get the correct path for secret files (local or Render's /etc/secrets/)"""
+    # Check Render's secret files location first
+    render_path = f'/etc/secrets/{filename}'
+    if os.path.exists(render_path):
+        return render_path
+    # Fall back to local path
+    local_path = filename
+    if os.path.exists(local_path):
+        return local_path
+    return None
+
 def get_google_sheets_service():
     """Legacy Google Sheets service (fallback)"""
     creds = None
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+    token_path = get_secret_file_path('token.pickle')
+    client_secret_path = get_secret_file_path('client_secret.json')
+    
+    if token_path:
+        with open(token_path, 'rb') as token:
             creds = pickle.load(token)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file('client_secret.json', SCOPES)
+        elif client_secret_path:
+            flow = InstalledAppFlow.from_client_secrets_file(client_secret_path, SCOPES)
             creds = flow.run_local_server(port=8080)
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+        else:
+            raise Exception("client_secret.json not found")
+        # Try to save token (may fail in read-only environments)
+        if token_path:
+            try:
+                with open(token_path, 'wb') as token:
+                    pickle.dump(creds, token)
+            except Exception as e:
+                logging.warning(f"Could not save token.pickle: {e}")
     service = build('sheets', 'v4', credentials=creds)
     return service
 
@@ -168,7 +190,11 @@ def api_get_topics():
     """Get topics - Try Google Sheets, fallback to default topics"""
     try:
         # Try to load from Google Sheets if credentials are available
-        if os.path.exists('token.pickle') and os.path.exists('client_secret.json'):
+        token_path = get_secret_file_path('token.pickle')
+        client_secret_path = get_secret_file_path('client_secret.json')
+        
+        if token_path and client_secret_path:
+            logging.info(f"🔑 Found credentials - token: {token_path}, client_secret: {client_secret_path}")
             service = get_google_sheets_service()
             topics_sheet_id = '12qFx-0Si0-g8Hp_yq7sIm7I5gJiACaOaLep04dSYC_U'
             topics = fetch_topics_legacy(service, topics_sheet_id)
@@ -176,7 +202,7 @@ def api_get_topics():
             return jsonify(topics)
         else:
             # Google Sheets credentials not available, use default topics
-            logging.info(f"ℹ️ Google Sheets credentials not found, using default topics: {len(DEFAULT_TOPICS)} topics")
+            logging.info(f"ℹ️ Google Sheets credentials not found (token: {token_path}, client_secret: {client_secret_path}), using default topics: {len(DEFAULT_TOPICS)} topics")
             return jsonify(DEFAULT_TOPICS)
             
     except Exception as e:
@@ -471,7 +497,7 @@ def api_health():
             "validator": validator is not None,
             "seo_manager": seo_manager is not None,
             "openai": bool(os.environ.get("OPENAI_API_KEY")),
-            "google_sheets": os.path.exists('token.pickle')
+            "google_sheets": get_secret_file_path('token.pickle') is not None
         },
         "feature_flags": {
             "use_json_library": USE_JSON_LIBRARY,
