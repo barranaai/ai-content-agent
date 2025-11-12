@@ -133,21 +133,29 @@ def get_google_sheets_service():
         with open(token_path, 'rb') as token_file:
             token_data = token_file.read()
             
-            # Check if the file is base64 encoded (workaround for Render text-based secret files)
-            if token_data.startswith(b'\xef') or token_data.startswith(b'gASV'):
-                # Looks like it might be text/corrupted, try base64 decode
-                try:
-                    import base64
-                    token_data = base64.b64decode(token_data)
-                    logging.info("🔄 Decoded base64-encoded token.pickle")
-                except:
-                    pass  # Not base64, continue with original data
+        # Log first few bytes for debugging
+        logging.info(f"🔍 Token file first bytes: {token_data[:10]}")
             
-            creds = pickle.loads(token_data)
+        # Try to detect if file is base64 encoded (workaround for Render text upload)
+        # Valid pickle files start with \x80\x03, \x80\x04, \x80\x05, or 'gASV' (base64 of pickle)
+        # If file starts with something else (like \xef for UTF-8 BOM), try base64 decode
+        if not (token_data.startswith(b'\x80') or token_data.startswith(b'gASV')):
+            try:
+                import base64
+                # Remove any whitespace/newlines that might have been added
+                token_data_clean = token_data.strip()
+                token_data = base64.b64decode(token_data_clean)
+                logging.info("🔄 Decoded base64-encoded token.pickle")
+            except Exception as decode_err:
+                logging.warning(f"⚠️ Not a valid base64 file: {decode_err}")
+                # Continue with original data
+        
+        creds = pickle.loads(token_data)
         logging.info(f"✅ Loaded credentials from {token_path}")
     except Exception as e:
         logging.error(f"❌ Failed to load token.pickle: {e}")
-        logging.error(f"First few bytes: {token_data[:20] if 'token_data' in locals() else 'N/A'}")
+        if 'token_data' in locals():
+            logging.error(f"📊 File size: {len(token_data)} bytes, first 20 bytes: {token_data[:20]}")
         raise
     
     # Check if credentials are valid
