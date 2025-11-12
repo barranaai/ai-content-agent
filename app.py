@@ -130,11 +130,24 @@ def get_google_sheets_service():
     
     # Load existing credentials
     try:
-        with open(token_path, 'rb') as token:
-            creds = pickle.load(token)
+        with open(token_path, 'rb') as token_file:
+            token_data = token_file.read()
+            
+            # Check if the file is base64 encoded (workaround for Render text-based secret files)
+            if token_data.startswith(b'\xef') or token_data.startswith(b'gASV'):
+                # Looks like it might be text/corrupted, try base64 decode
+                try:
+                    import base64
+                    token_data = base64.b64decode(token_data)
+                    logging.info("🔄 Decoded base64-encoded token.pickle")
+                except:
+                    pass  # Not base64, continue with original data
+            
+            creds = pickle.loads(token_data)
         logging.info(f"✅ Loaded credentials from {token_path}")
     except Exception as e:
         logging.error(f"❌ Failed to load token.pickle: {e}")
+        logging.error(f"First few bytes: {token_data[:20] if 'token_data' in locals() else 'N/A'}")
         raise
     
     # Check if credentials are valid
