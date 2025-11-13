@@ -109,11 +109,27 @@ def get_secret_file_path(filename):
     # Check Render's secret files location first
     render_path = f'/etc/secrets/{filename}'
     if os.path.exists(render_path):
+        logging.info(f"✅ Found {filename} at {render_path}")
         return render_path
+    else:
+        logging.debug(f"❌ {filename} not found at {render_path}")
+    
     # Fall back to local path
     local_path = filename
     if os.path.exists(local_path):
+        logging.info(f"✅ Found {filename} at local path: {local_path}")
         return local_path
+    else:
+        logging.warning(f"❌ {filename} not found at local path: {local_path}")
+    
+    # List what's actually in /etc/secrets/ for debugging
+    if os.path.exists('/etc/secrets'):
+        try:
+            secrets_files = os.listdir('/etc/secrets')
+            logging.info(f"📁 Files in /etc/secrets/: {secrets_files}")
+        except Exception as e:
+            logging.warning(f"⚠️ Could not list /etc/secrets/: {e}")
+    
     return None
 
 def get_google_sheets_service():
